@@ -12,7 +12,7 @@ f = File.read(rb_filename)
 pre_parsed = StringIO.new
 f.each_line do |line|
   if line =~ /\A#include '([^']+)/
-    pre_parsed << File.read(File.expand_path("../../../#{$1}", __FILE__))
+    pre_parsed << File.read(File.expand_path("../#{$1}", __FILE__))
   else
     pre_parsed << line
   end
