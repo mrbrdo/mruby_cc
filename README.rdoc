@@ -18,6 +18,8 @@ Not stable for any kind of use. Buggy.
 
 Must compile also parts of mrblib (e.g. mruby/mrblib/enum.rb) that you use, or there is a good chance for crash. You can add include into your .rb file.
 
+Note you must use *Ruby MRI* to run mrbcc.rb, not mruby!
+
 = Example
 
 Example to run array test from mruby:
@@ -99,3 +101,24 @@ Here is a list of all the tests from mruby (but cannot run all at once = crash):
   report
 
 Right now cannot handle very long files. You can run a few tests at once but not all at once (will crash).
+
+= Performance
+
+Right now the performance of method calling should be improved. But we can see some performance improvement with tight loops (note I use while because each will use method calling on Proc).
+
+  i = 0
+
+  while i < 1000000000
+    5 * 1.7
+    i += 1
+  end
+
+  puts i
+
+Compiled
+
+  real  0m12.952s
+
+Mruby interpreter
+
+  real  1m14.385s
