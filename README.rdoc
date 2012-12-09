@@ -18,7 +18,7 @@ Not stable for any kind of use. Buggy.
 
 Must compile also parts of mrblib (e.g. mruby/mrblib/enum.rb) that you use, or there is a good chance for crash. You can add include into your .rb file.
 
-Note you must use __Ruby MRI__ to run mrbcc.rb, not mruby!
+Note you must use *Ruby* *MRI* to run mrbcc.rb, not mruby!
 
 = Example
 
