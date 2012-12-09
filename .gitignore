@@ -1,0 +1,23 @@
+# /
+*.bak
+*.dylib
+*.inc
+*.o
+*.a
+*.orig
+*.rej
+*.sav
+*.swp
+*.d
+*~
+.DS_Store
+.ccmalloc
+.svn
+/.git
+cscope.out
+CMakeFiles
+CMakeCache.txt
+test
+test.rb
+tmp_out.rb
+tmp_out.mrb
