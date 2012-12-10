@@ -150,7 +150,18 @@ class OpcodeParser
   end
 
   def lambda_arg(arg_name)
-    parser = OpcodeParser.new(@parser, opcodes, nil, @irep_idx + @instr.send(arg_name))
+    # only for readability / easier debugging, try to include method name
+    if irep.iseqs[@line_number+1].present? &&
+      irep.iseqs[@line_number+1].opcode == "OP_METHOD"
+      iseq_met = irep.iseqs[@line_number+1]
+      met_name = irep.syms[iseq_met.GETARG_B]
+      met_name = met_name.dup.gsub!(/[^A-Za-z0-9_]/, "") # strip stuff like ?, ! from name
+      met_name = "met_#{name}_#{SecureRandom.hex}"
+    else
+      met_name = nil
+    end
+
+    parser = OpcodeParser.new(@parser, opcodes, met_name, @irep_idx + @instr.send(arg_name))
     str = parser.process_irep
     @outf = StringIO.new(str + @outf.string)
     @outf.seek(0, IO::SEEK_END)

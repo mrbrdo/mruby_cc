@@ -9,26 +9,30 @@
       int a = GETARG_A(i);
       int n = GETARG_C(i);
       mrb_callinfo *prev_ci = mrb->ci;
+      mrb_value ret;
 
-      mrbb_send(mrb, syms[GETARG_B(i)], n, &regs, a, 0);
-      mrb->arena_idx = ai; // TODO probably can remove
+      ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 0);
       if (mrb->ci != prev_ci) { // special OP_RETURN (e.g. break)
         cipush(mrb);
-        return regs[a];
+        return ret;
       }
+      regs[a] = ret;
+      mrb->arena_idx = ai; // TODO do we need (because of break;)?
       NEXT;
   }
   CASE(OP_SENDB) {
       int a = GETARG_A(i);
       int n = GETARG_C(i);
       mrb_callinfo *prev_ci = mrb->ci;
+      mrb_value ret;
 
-      mrbb_send(mrb, syms[GETARG_B(i)], n, &regs, a, 1);
-      mrb->arena_idx = ai; // TODO probably can remove
+      ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 1);
       if (mrb->ci != prev_ci) { // special OP_RETURN (e.g. break)
         cipush(mrb);
-        return regs[a];
+        return ret;
       }
+      regs[a] = ret;
+      mrb->arena_idx = ai; // TODO probably can remove
       NEXT;
   }
 

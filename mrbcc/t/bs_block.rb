@@ -293,9 +293,10 @@ assert('BS Block 27') do
 end
 
 assert('BS Block 28') do
-  3.times{|bl|
+  r = 3.times{|bl|
     break 10
-  } == 10
+  }
+  r == 10
 end
 
 assert('BS Block 29') do
