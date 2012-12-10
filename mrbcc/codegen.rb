@@ -5,7 +5,7 @@ require_relative './rite_parser'
 
 class OpcodeParser
   attr_reader :name, :irep, :opcodes
-  DEBUG_MODE = false
+  DEBUG_MODE = true
   def initialize(parser, opcodes, name, irep_idx)
     @name = name || "met_#{SecureRandom.hex}"
     @irep = parser.ireps[irep_idx]
@@ -71,6 +71,11 @@ class OpcodeParser
       @outf.write("\n  #{label}:\n  ")
       if DEBUG_MODE
         @outf.write("  printf(\"#{label}\\n\"); fflush(stdout);\n")
+        str = <<-EOF
+        printf("X#{label.strip}\\nXstack ptr \%d\\n", mrb->stack);
+        printf("Xregs ptr \%d\\n", regs);
+        EOF
+        @outf.write(str)
       end
       @outf.write(@instr_body)
     end
