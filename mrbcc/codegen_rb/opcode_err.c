@@ -14,7 +14,7 @@
         // if rescued from method that was called from this method
         // and didn't have its own rescue
         mrb->ci = ci;
-        mrb->stack = mrb->stbase + mrb->ci->stackidx;
+        mrb->stack = mrb->stbase + mrb->ci->stackidx + mrb->ci[-1].nregs;
         regs = mrb->stack;
 
         // go to rescue

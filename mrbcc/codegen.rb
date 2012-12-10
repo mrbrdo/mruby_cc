@@ -6,7 +6,7 @@ require_relative './rite_parser'
 class OpcodeParser
   attr_reader :name, :irep, :opcodes
   DEBUG_MODE = false
-  DEBUG_MODE_VERBOSE = DEBUG_MODE && true
+  DEBUG_MODE_VERBOSE = DEBUG_MODE && false
   def initialize(parser, opcodes, name, irep_idx)
     @name = name || "met_#{SecureRandom.hex}"
     @irep = parser.ireps[irep_idx]
