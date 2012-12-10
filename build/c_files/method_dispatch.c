@@ -1,5 +1,5 @@
 void
-mrbb_send(mrb_state *mrb, mrb_sym mid, int argc, mrb_value *regs, int a, int sendb)
+mrbb_send(mrb_state *mrb, mrb_sym mid, int argc, mrb_value **regs_ptr, int a, int sendb)
 {
   struct RProc *p;
   struct RClass *c;
@@ -7,6 +7,7 @@ mrbb_send(mrb_state *mrb, mrb_sym mid, int argc, mrb_value *regs, int a, int sen
   mrb_callinfo *ci;
   int n;
   mrb_value val;
+  mrb_value *regs = *regs_ptr;
   mrb_value self = regs[a];
   mrb_value *argv = regs + a + 1;
   mrb_value blk;
@@ -80,7 +81,7 @@ mrbb_send(mrb_state *mrb, mrb_sym mid, int argc, mrb_value *regs, int a, int sen
       ci->nregs = n + 2;
     }
     int ai = mrb->arena_idx;
-    regs[a] = p->body.func(mrb, self);
+    val = p->body.func(mrb, self);
     mrb->arena_idx = ai;
     mrb->stack = mrb->stbase + mrb->ci->stackidx;
     cipop(mrb);
@@ -92,6 +93,8 @@ mrbb_send(mrb_state *mrb, mrb_sym mid, int argc, mrb_value *regs, int a, int sen
     else {
       stack_extend(mrb, p->body.irep->nregs,  ci->argc+2);
     }
-    regs[a] = mrb_run(mrb, p, self);
+    val = mrb_run(mrb, p, self);
   }
+  *regs_ptr = mrb->stack; // stack_extend might realloc stack
+  mrb->stack[a] = val; // save result (use mrb->stack if realloced)
 }

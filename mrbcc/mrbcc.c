@@ -36,7 +36,7 @@
     OP_CMP_BODY(op,attr_f,attr_f);\
     break;\
   default:\
-    mrbb_send(mrb, mrb_intern(mrb, #op ), 1, regs, a, 0);\
+    mrbb_send(mrb, mrb_intern(mrb, #op ), 1, &regs, a, 0);\
     break;\
   }\
 } while (0)

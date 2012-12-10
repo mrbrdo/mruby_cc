@@ -1,6 +1,5 @@
     CASE(OP_RESCUE) { // TODO
       /* A      R(A) := exc; clear(exc) */
-      mrb->ci = ci;
       SET_OBJ_VALUE(regs[GETARG_A(i)], mrb->exc);
       mrb->exc = 0;
       NEXT;
@@ -11,7 +10,7 @@
       int n = GETARG_C(i);
       mrb_callinfo *prev_ci = mrb->ci;
 
-      mrbb_send(mrb, syms[GETARG_B(i)], n, regs, a, 0);
+      mrbb_send(mrb, syms[GETARG_B(i)], n, &regs, a, 0);
       mrb->arena_idx = ai; // TODO probably can remove
       if (mrb->ci != prev_ci) { // special OP_RETURN (e.g. break)
         cipush(mrb);
@@ -24,7 +23,7 @@
       int n = GETARG_C(i);
       mrb_callinfo *prev_ci = mrb->ci;
 
-      mrbb_send(mrb, syms[GETARG_B(i)], n, regs, a, 1);
+      mrbb_send(mrb, syms[GETARG_B(i)], n, &regs, a, 1);
       mrb->arena_idx = ai; // TODO probably can remove
       if (mrb->ci != prev_ci) { // special OP_RETURN (e.g. break)
         cipush(mrb);
@@ -36,6 +35,10 @@
 
     CASE(OP_STOP) {
       /*        stop VM */
+      if (mrb->exc) {
+        printf("OP_STOP reached with Exception:\n");
+        mrb_p(mrb, mrb_obj_value(mrb->exc));
+      }
 /*    L_STOP:
       {
   int n = mrb->ci->eidx;

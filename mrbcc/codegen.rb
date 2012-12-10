@@ -5,7 +5,8 @@ require_relative './rite_parser'
 
 class OpcodeParser
   attr_reader :name, :irep, :opcodes
-  DEBUG_MODE = true
+  DEBUG_MODE = false
+  DEBUG_MODE_VERBOSE = DEBUG_MODE && true
   def initialize(parser, opcodes, name, irep_idx)
     @name = name || "met_#{SecureRandom.hex}"
     @irep = parser.ireps[irep_idx]
@@ -23,7 +24,7 @@ class OpcodeParser
     @outf = StringIO.new
     @outf.write(method_prelude)
     irep.iseqs.each.with_index do |instr, line_number|
-      puts instr if DEBUG_MODE
+      puts instr if DEBUG_MODE_VERBOSE
 
       @instr = instr
       @line_number = line_number
@@ -75,7 +76,7 @@ class OpcodeParser
         printf("X#{label.strip}\\nXstack ptr \%d\\n", mrb->stack);
         printf("Xregs ptr \%d\\n", regs);
         EOF
-        @outf.write(str)
+        # @outf.write(str)
       end
       @outf.write(@instr_body)
     end
@@ -83,7 +84,15 @@ class OpcodeParser
   end
 
   def wrap_body(body)
-    "#{body}\n}\n"
+    body += "\n"
+    if @irep_idx == 0
+      # TODO look at OP_STOP?
+      body += "  return mrb_nil_value();"
+    else
+      body += "  printf(\"ERROR: Method #{@name} did not return.\\n\");\n"
+      body += "  exit(1);\n" # so we don't get warnings about no return
+    end
+    body += "}\n"
   end
 
   def method_prelude

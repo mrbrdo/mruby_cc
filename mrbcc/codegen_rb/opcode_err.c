@@ -11,6 +11,13 @@
         mrb->rescue[mrb->ci->ridx++] = &c_jmp;
       }
       else {
+        // if rescued from method that was called from this method
+        // and didn't have its own rescue
+        mrb->ci = ci;
+        mrb->stack = mrb->stbase + mrb->ci->stackidx;
+        regs = mrb->stack;
+
+        // go to rescue
         mrb->ci->ridx--;
         mrb->jmp = (jmp_buf *)mrb->rescue[mrb->ci->ridx-1];
         goto rescue_label(GETARG_sBx(i));
