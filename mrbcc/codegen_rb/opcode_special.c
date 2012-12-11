@@ -1,61 +1,15 @@
 
     CASE(OP_CALL) {
       /* A      R(A) := self.call(frame.argc, frame.argv) */
-      mrb_callinfo *ci;
-      mrb_value recv = mrb->stack[0];
-      struct RProc *m = mrb_proc_ptr(recv);
 
-      /* replace callinfo */
-      ci = mrb->ci;
-      ci->target_class = m->target_class;
-      ci->proc = m;
-      if (m->env) {
-  if (m->env->mid) {
-    ci->mid = m->env->mid;
-  }
-        if (!m->env->stack) {
-          m->env->stack = mrb->stack;
-        }
-      }
+      // OP_CALL is used in mruby only in Proc#call and Proc#[]
+      // This opcode is not generated in mruby bytecode
+      // It is only generated on the fly
+      // We overwrite both these methods, so this opcode should never appear
 
-      /* prepare stack */
-      if (MRB_PROC_CFUNC_P(m)) {
-  recv = m->body.func(mrb, recv);
-        mrb->arena_idx = ai;
-        if (mrb->exc) goto L_RAISE;
-        /* pop stackpos */
-  ci = mrb->ci;
-        regs = mrb->stack = mrb->stbase + ci->stackidx;
-  regs[ci->acc] = recv;
-  pc = ci->pc;
-        cipop(mrb);
-        irep = mrb->ci->proc->body.irep;
-        pool = irep->pool;
-        syms = irep->syms;
-        JUMP;
-      }
-      else {
-        /* setup environment for calling method */
-        proc = m;
-        irep = m->body.irep;
-  if (!irep) {
-    mrb->stack[0] = mrb_nil_value();
-    goto L_RETURN;
-  }
-        pool = irep->pool;
-        syms = irep->syms;
-        ci->nregs = irep->nregs;
-        if (ci->argc < 0) {
-          stack_extend(mrb, (irep->nregs < 3) ? 3 : irep->nregs, 3);
-        }
-        else {
-          stack_extend(mrb, irep->nregs,  ci->argc+2);
-        }
-        regs = mrb->stack;
-        regs[0] = m->env->stack[0];
-        pc = m->body.irep->iseq;
-        JUMP;
-      }
+      printf("Error: OP_CALL\n");
+      exit(0);
+      FAIL_COMPILE_GARBAGE // This will fail compiler
     }
 
     CASE(OP_SUPER) {
