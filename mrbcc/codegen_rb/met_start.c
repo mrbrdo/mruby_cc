@@ -4,6 +4,7 @@ mrb_value MET_NAME(mrb_state *mrb, mrb_value self) {
   jmp_buf *prev_jmp = (jmp_buf *)mrb->jmp;
   struct RProc *proc = mrb->ci->proc;
   mrb_callinfo *ci = mrb->ci;
+  int cioff = mrb->ci - mrb->cibase;
 
   // I have to set up my own stack
   mrb->ci->nregs = FUNC_NREGS + 2;

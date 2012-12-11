@@ -7,6 +7,7 @@ void mrbb_main(mrb_state *mrb) {
   int ai = mrb->arena_idx;
   jmp_buf *prev_jmp = (jmp_buf *)mrb->jmp;
   jmp_buf c_jmp;
+  mrb_value result;
 
   if (setjmp(c_jmp) == 0) {
     mrb->jmp = &c_jmp;
@@ -52,10 +53,15 @@ void mrbb_main(mrb_state *mrb) {
   // else part removed since it is always CFUNC
 
   //mrb_gc_protect(mrb, mrb_obj_value(ci->proc)); // TODO just testing...
-  mrb->stack[0] = p->body.func(mrb, recv);
+  //mrb->stack[0] =
+  result = p->body.func(mrb, recv);
+  mrb_gc_protect(mrb, result);
   mrb->arena_idx = ai;
-  if (mrb->exc) mrbb_raise(mrb, prev_jmp); // TODO
-  /* pop stackpos */
   mrb->stack = mrb->stbase + mrb->ci->stackidx;
   cipop(mrb);
+  mrb->stack[0] = result;
+  //if (mrb->exc) mrbb_raise(mrb, prev_jmp); // TODO
+  /* pop stackpos */
+  //mrb->stack = mrb->stbase + mrb->ci->stackidx;
+  //cipop(mrb);
 }

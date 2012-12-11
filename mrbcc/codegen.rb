@@ -73,10 +73,10 @@ class OpcodeParser
       if DEBUG_MODE
         @outf.write("  printf(\"#{label}\\n\"); fflush(stdout);\n")
         str = <<-EOF
-        printf("X#{label.strip}\\nXstack ptr \%d\\n", mrb->stack);
-        printf("Xregs ptr \%d\\n", regs);
+        printf("X#{label.strip}\\nXstack ptr \%d\\n", mrb->stack - mrb->stbase);
+        printf("Xregs ptr \%d\\n", regs - mrb->stack);
         EOF
-        # @outf.write(str)
+        #@outf.write(str)
       end
       @outf.write(@instr_body)
     end
@@ -87,7 +87,7 @@ class OpcodeParser
     body += "\n"
     if @irep_idx == 0
       # TODO look at OP_STOP?
-      body += "  return mrb_nil_value();"
+      body += "  return mrb_nil_value();\n"
     else
       body += "  printf(\"ERROR: Method #{@name} did not return.\\n\");\n"
       body += "  exit(1);\n" # so we don't get warnings about no return
@@ -151,6 +151,7 @@ class OpcodeParser
 
   def lambda_arg(arg_name)
     # only for readability / easier debugging, try to include method name
+    # TODO: doesn't work right always (infinite recursion for example, wrong name)
     if irep.iseqs[@line_number+1].present? &&
       irep.iseqs[@line_number+1].opcode == "OP_METHOD"
       iseq_met = irep.iseqs[@line_number+1]

@@ -8,12 +8,12 @@
   CASE(OP_SEND) {
       int a = GETARG_A(i);
       int n = GETARG_C(i);
-      mrb_callinfo *prev_ci = mrb->ci;
+      mrb_callinfo *prev_ci = mrb->ci - mrb->cibase;
       mrb_value ret;
 
       ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 0);
-      if (mrb->ci != prev_ci) { // special OP_RETURN (e.g. break)
-        cipush(mrb);
+      if (mrb->ci->proc == -1) {
+        //cipush(mrb);
         return ret;
       }
       regs[a] = ret;
@@ -23,12 +23,12 @@
   CASE(OP_SENDB) {
       int a = GETARG_A(i);
       int n = GETARG_C(i);
-      mrb_callinfo *prev_ci = mrb->ci;
+      mrb_callinfo *prev_ci = mrb->ci - mrb->cibase;
       mrb_value ret;
 
       ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 1);
-      if (mrb->ci != prev_ci) { // special OP_RETURN (e.g. break)
-        cipush(mrb);
+      if (mrb->ci->proc == -1) {
+        //cipush(mrb);
         return ret;
       }
       regs[a] = ret;

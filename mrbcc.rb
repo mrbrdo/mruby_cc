@@ -12,7 +12,12 @@ f = File.read(rb_filename)
 pre_parsed = StringIO.new
 f.each_line do |line|
   if line =~ /\A#include '([^']+)/
-    pre_parsed << File.read(File.expand_path("../#{$1}", __FILE__))
+    files = $1
+    files = File.expand_path("../#{$1}", __FILE__) unless files.start_with?("/")
+
+    Dir[files].each do |fn|
+      pre_parsed << File.read(fn)
+    end
   else
     pre_parsed << line
   end
@@ -43,4 +48,4 @@ FileUtils.mv("#{path}/build/mrbcc_out", "#{path}/#{rb_filename_noext}")
 # clean up
 FileUtils.rm(rb_filename.gsub(/\.rb$/, ".mrb"), :force => true)
 FileUtils.rm(File.expand_path("../tmp_out.mrb", __FILE__), :force => true)
-FileUtils.rm(File.expand_path("../tmp_out.rb", __FILE__), :force => true)
+#FileUtils.rm(File.expand_path("../tmp_out.rb", __FILE__), :force => true)

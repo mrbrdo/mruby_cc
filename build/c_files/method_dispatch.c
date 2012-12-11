@@ -186,11 +186,20 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int argc, mrb_value **regs_ptr, int a, 
     }
     int ai = mrb->arena_idx;
     int stackidx = mrb->ci->stackidx;
+    int cioff = mrb->ci - mrb->cibase;
     val = p->body.func(mrb, self);
     mrb->arena_idx = ai;
     mrb_gc_protect(mrb, val);
-    mrb->stack = mrb->stbase + stackidx;
-    cipop(mrb);
+    if ((mrb->ci - mrb->cibase) == cioff) {
+      mrb->stack = mrb->stbase + stackidx;
+      cipop(mrb);
+    } else { // break
+      mrb->stack = mrb->stbase + stackidx; // not needed really
+      cipop(mrb);
+      cipush(mrb);
+      mrb->ci->proc = -1;
+      // TODO i think i cant pop every time, only the first time? but i do push too...
+    }
   }
   else {
     if (ci->argc < 0) {
