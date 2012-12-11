@@ -23,7 +23,7 @@ Note you must use *Ruby* *MRI* to run mrbcc.rb, not mruby!
 
 You *must* include the whole mrblib (mruby standard library) or your program will not work properly. This is because currently interaction with interpreted code is not working, but it is possible in the future.
 
-To include mrblib, add this to the top of your .rb file:
+To include mrblib, add this to the top of your .rb file that you are compiling:
 
   #include 'mruby/mrblib/array.rb'
   #include 'mruby/mrblib/enum.rb'
