@@ -22,7 +22,7 @@ Note you must use *Ruby* *MRI* to run mrbcc.rb, not mruby!
 
 = Example
 
-Example to run array test from mruby:
+Example to run mruby test suite:
 
   #include 'mruby/mrblib/array.rb'
   #include 'mruby/mrblib/enum.rb'
@@ -38,11 +38,9 @@ Example to run array test from mruby:
   #include 'mruby/mrblib/struct.rb'
 
   #include 'mruby/test/assert.rb'
-  #include 'mruby/test/t/array.rb'
+  #include 'mruby/test/t/*.rb'
 
   report
-
-If you make too long .rb input it will probably crash, still investigating.
 
 = Performance
 
@@ -64,63 +62,3 @@ Compiled
 Mruby interpreter
 
   real  1m14.385s
-
-= All possible tests
-
-Here is a list of all the tests from mruby (but cannot run all at once = crash):
-
-  #include 'mruby/mrblib/array.rb'
-  #include 'mruby/mrblib/enum.rb'
-  #include 'mruby/mrblib/class.rb'
-  #include 'mruby/mrblib/compar.rb'
-  #include 'mruby/mrblib/error.rb'
-  #include 'mruby/mrblib/hash.rb'
-  #include 'mruby/mrblib/kernel.rb'
-  #include 'mruby/mrblib/numeric.rb'
-  #include 'mruby/mrblib/print.rb'
-  #include 'mruby/mrblib/range.rb'
-  #include 'mruby/mrblib/string.rb'
-  #include 'mruby/mrblib/struct.rb'
-
-  #include 'mruby/test/assert.rb'
-  #include 'mruby/test/t/argumenterror.rb'
-  #include 'mruby/test/t/array.rb'
-  #include 'mruby/test/t/basicobject.rb'
-  #include 'mruby/test/t/bs_block.rb'
-  #include 'mruby/test/t/bs_literal.rb'
-  #include 'mruby/test/t/class.rb'
-  #include 'mruby/test/t/comparable.rb'
-  #include 'mruby/test/t/enumerable.rb'
-  #include 'mruby/test/t/exception.rb'
-  #include 'mruby/test/t/false.rb'
-  #include 'mruby/test/t/float.rb'
-  #include 'mruby/test/t/hash.rb'
-  #include 'mruby/test/t/indexerror.rb'
-  #include 'mruby/test/t/integer.rb'
-  #include 'mruby/test/t/kernel.rb'
-  #include 'mruby/test/t/literals.rb'
-  #include 'mruby/test/t/localjumperror.rb'
-  #include 'mruby/test/t/math.rb'
-  #include 'mruby/test/t/module.rb'
-  #include 'mruby/test/t/nameerror.rb'
-  #include 'mruby/test/t/nil.rb'
-  #include 'mruby/test/t/nomethoderror.rb'
-  #include 'mruby/test/t/numeric.rb'
-  #include 'mruby/test/t/object.rb'
-  #include 'mruby/test/t/proc.rb'
-  #include 'mruby/test/t/range.rb'
-  #include 'mruby/test/t/rangeerror.rb'
-  #include 'mruby/test/t/regexperror.rb'
-  #include 'mruby/test/t/runtimeerror.rb'
-  #include 'mruby/test/t/standarderror.rb'
-  #include 'mruby/test/t/string.rb'
-  #include 'mruby/test/t/struct.rb'
-  #include 'mruby/test/t/symbol.rb'
-  #include 'mruby/test/t/syntax.rb'
-  #include 'mruby/test/t/time.rb'
-  #include 'mruby/test/t/true.rb'
-  #include 'mruby/test/t/typeerror.rb'
-
-  report
-
-Right now cannot handle very long files. You can run a few tests at once but not all at once (will crash).
