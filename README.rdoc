@@ -16,9 +16,29 @@ Not stable for any kind of use. Buggy.
 
   ./test
 
-Must compile also parts of mrblib (e.g. mruby/mrblib/enum.rb) that you use, or there is a good chance for crash. You can add include into your .rb file.
-
+Must compile also parts of mrblib (e.g. mruby/mrblib/enum.rb) that you use, because currently interacting with non-compiled code is not working. See Include Mrblib section.
 Note you must use *Ruby* *MRI* to run mrbcc.rb, not mruby!
+
+= Include Mrblib
+
+You *must* include the whole mrblib (mruby standard library) or your program will not work properly. This is because currently interaction with interpreted code is not working, but it is possible in the future.
+
+To include mrblib, add this to the top of your .rb file:
+
+  #include 'mruby/mrblib/array.rb'
+  #include 'mruby/mrblib/enum.rb'
+  #include 'mruby/mrblib/class.rb'
+  #include 'mruby/mrblib/compar.rb'
+  #include 'mruby/mrblib/error.rb'
+  #include 'mruby/mrblib/hash.rb'
+  #include 'mruby/mrblib/kernel.rb'
+  #include 'mruby/mrblib/numeric.rb'
+  #include 'mruby/mrblib/print.rb'
+  #include 'mruby/mrblib/range.rb'
+  #include 'mruby/mrblib/string.rb'
+  #include 'mruby/mrblib/struct.rb'
+
+The #include is just something I made up, it is parsed in mrbcc.rb script. It just takes the file and copies the contents into your main ruby file.
 
 = Example
 
