@@ -22,3 +22,4 @@ test.rb
 tmp_out.rb
 tmp_out.mrb
 build/c_files/out.c
+testsuite
