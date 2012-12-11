@@ -8,12 +8,6 @@ mrb_value mrbb_proc_call(mrb_state *mrb, mrb_value self)
   struct RProc *m = mrb_proc_ptr(recv);
   int ai = mrb->arena_idx;
 
- /* if (!MRB_PROC_CFUNC_P(m)) {
-    printf("CALL2\n");
-    return mrb_funcall_with_block(mrb, recv, mrb_intern(mrb, "call2"), 1, (mrb->stack + 1), *(mrb->stack + 2));
-    printf("CALL22\n");
-  }*/
-
   /* replace callinfo */
   ci = mrb->ci;
   ci->target_class = m->target_class;
@@ -66,16 +60,24 @@ struct RProc *mrbb_proc_new(mrb_state* mrb, mrb_func_t cfunc)
   struct RProc *p = mrb_proc_new_cfunc(mrb, cfunc);
 
   p->flags |= MRB_PROC_MRBCFUNC;
-  p->env = 0;
 
   return p;
 }
 
+/* Soon:
+
+struct RProc *mrbb_closure_new(mrb_state* mrb, mrb_func_t cfunc, unsigned int nlocals)
+{
+  struct RProc *p = mrb_closure_new_cfunc(mrb, cfunc);
+
+  p->flags |= MRB_PROC_MRBCFUNC;
+
+  return p;
+}
+*/
 struct RProc *mrbb_closure_new(mrb_state* mrb, mrb_func_t cfunc, unsigned int nlocals)
 {
   struct RProc *p = mrbb_proc_new(mrb, cfunc);
-
-  // TODO: use new matz implementation, but set mrbcfunc flag
 
   // stolen from mrb_closure_new()
   struct REnv *e;
