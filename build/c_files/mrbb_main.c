@@ -14,7 +14,7 @@ mrb_value mrbb_main(mrb_state *mrb) {
     mrb->jmp = prev_jmp;
     printf("Uncaught exception:\n");
     mrb_p(mrb, mrb_obj_value(mrb->exc));
-    return;
+    return mrb_obj_value(mrb->exc);
   }
 
   if (!mrb->stack) {
@@ -28,6 +28,7 @@ mrb_value mrbb_main(mrb_state *mrb) {
     mrb_define_method_raw(mrb, mrb->proc_class, mrb_intern(mrb, "[]"), m);
   }
 
+  mrb->ci->nregs = 0;
   /* prepare stack */
   ci = cipush(mrb);
   ci->acc = -1;
