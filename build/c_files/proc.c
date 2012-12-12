@@ -17,7 +17,6 @@ if (m->env->mid) {
 ci->mid = m->env->mid;
 }
     if (!m->env->stack) {
-      printf("--!! set stack\n");
       m->env->stack = mrb->stack;
     }
   }

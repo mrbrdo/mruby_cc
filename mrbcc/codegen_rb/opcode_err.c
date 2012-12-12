@@ -1,6 +1,7 @@
     CASE(OP_ONERR) {
       /* sBx    pc+=sBx on exception */
       jmp_buf c_jmp;
+      int stoff = mrb->stack - mrb->stbase;
       if (setjmp(c_jmp) == 0) {
         mrb->jmp = &c_jmp;
         if (mrb->rsize <= mrb->ci->ridx) {
@@ -13,10 +14,10 @@
       else {
         // if rescued from method that was called from this method
         // and didn't have its own rescue
-        // fix global state
+        // fix global state, be careful if stbase or cibase changed
         mrb->ci = mrb->cibase + cioff;
+        mrb->stack = mrb->stbase + stoff;
         ci = mrb->ci;
-        mrb->stack = mrb->stbase + mrb->ci->stackidx + mrb->ci[-1].nregs;
         regs = mrb->stack;
 
         // go to rescue
