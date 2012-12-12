@@ -68,7 +68,7 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   /* prepare stack */
   mrb->stack[0] = recv;
 
-  p = mrbb_proc_new(mrb, rb_main);
+  p = mrbb_proc_new(mrb, script_entry_point);
   p->target_class = ci->target_class;
   ci->proc = p;
 

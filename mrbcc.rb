@@ -36,7 +36,7 @@ parser = RiteParser.new(File.expand_path("../tmp_out.mrb", __FILE__))
 
 # create C file
 File.open(File.expand_path("../build/c_files/out.c", __FILE__), "w") do |wf|
-  wf.write(OpcodeParser.new(parser, opcodes.opcodes, "rb_main", 0).process_irep)
+  wf.write(OpcodeParser.new(parser, opcodes.opcodes, "script_entry_point", 0).process_irep)
 end
 
 # compile C file
