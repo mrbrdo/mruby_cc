@@ -30,6 +30,7 @@ Now mrblib is included automatically.
 
 Now it is possible to dynamically load other pre-compiled ruby files.
 
+  # some_ruby_file.rb
   load_compiled_mrb "dyn.so"
 
 I recommend you use the full file path.
