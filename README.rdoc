@@ -18,6 +18,7 @@ Then install:
   ./setup.sh
 
 The setup.sh script compiles mruby, mrblib and the runner executable.
+You should probably re-run setup.sh when you git pull.
 
 = Use
 
