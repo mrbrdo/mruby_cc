@@ -77,8 +77,11 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
       cipop(mrb);
     } else { // break
       mrb->stack = mrb->stbase + stackidx; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
-      cipop(mrb);
-      cipush(mrb);
+      // We NEED to cipop the first time, but not after that
+      if (mrb->ci->proc != (struct RProc *) -1) {
+        cipop(mrb);
+        cipush(mrb);
+      }
       mrb->ci->proc = (struct RProc *)-1;
     }
     if (mrb->exc) mrbb_raise(mrb, 0);
