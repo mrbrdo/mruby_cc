@@ -9,7 +9,8 @@ The value below allows about 60000 recursive calls in the simplest case. */
 #ifndef MRB_STACK_MAX
 #define MRB_STACK_MAX 10000//((1<<18) - MRB_STACK_GROWTH)
 #endif
-// TODO: larger values of MRB_STACK_MAX lead to segfault
+// TODO: need to test if default MRB_STACK_MAX still leads to segfault
+// if not then use the default
 
 static void
 stack_extend(mrb_state *mrb, int room, int keep)
