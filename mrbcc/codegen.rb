@@ -101,30 +101,6 @@ class OpcodeParser
       gsub("MET_NAME", @name)
   end
 
-  def parse_args(args)
-    args.map do |arg|
-      if arg =~ /\AR(\d+)\z/
-        $1
-      elsif arg =~ /\A:/
-        sym_str = arg[1, arg.length-1]
-        #"mrb_intern(mrb, \"#{sym_str}\")"
-        "\"#{sym_str}\""
-      elsif arg =~/\A"/
-        arg
-      elsif arg =~/\A\d+\z/
-        arg
-      elsif arg =~ /\AI\((\d+)\)\z/
-        parser = OpcodeParser.new(nil, opcodes, $1.to_i + @irep_idx)
-        str = parser.process_irep
-        @outf = StringIO.new(str + @outf.string)
-        @outf.seek(0, IO::SEEK_END)
-        parser.name
-      else
-        arg
-      end
-    end
-  end
-
   def gsub_args
     ["GETARG_A", "GETARG_Ax"].each do |search_str|
       @instr_body.gsub!("#{search_str}(i)", @instr.send(search_str).to_s)
@@ -156,8 +132,8 @@ class OpcodeParser
       irep.iseqs[@line_number+1].opcode == "OP_METHOD"
       iseq_met = irep.iseqs[@line_number+1]
       met_name = irep.syms[iseq_met.GETARG_B]
-      met_name = met_name.dup.gsub!(/[^A-Za-z0-9_]/, "") # strip stuff like ?, ! from name
-      met_name = "met_#{name}_#{SecureRandom.hex}"
+      met_name = met_name.gsub(/[^\w\d_]/, "") # strip stuff like ?, ! from name
+      met_name = "met_#{met_name}_#{SecureRandom.hex}"
     else
       met_name = nil
     end
