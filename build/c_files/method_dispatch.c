@@ -66,6 +66,7 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
     else {
       ci->nregs = n + 2;
     }
+
     int ai = mrb->arena_idx;
     int stackidx = mrb->ci->stackidx;
     int cioff = mrb->ci - mrb->cibase;
@@ -84,7 +85,14 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
       }
       mrb->ci->proc = (struct RProc *)-1;
     }
-    if (mrb->exc) mrbb_raise(mrb, 0);
+    // TODO: if (MRB_PROC_MRBCFUNC_P(m))
+    /*} else { // this improves speed by some small factor
+        val = m->body.func(mrb, recv);
+        // pop stackpos
+        mrb->stack = mrb->stbase + mrb->ci->stackidx;
+        cipop(mrb);
+    }*/
+    if (mrb->exc) mrbb_raise(mrb, 0); // we can do this before cipop... see OP_SEND
   }
   else {
     mrb_irep *irep = m->body.irep;
