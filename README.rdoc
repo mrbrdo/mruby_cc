@@ -8,6 +8,11 @@ You need:
 
 * Ruby 1.9 or compatible
 * gcc and be able to compile mruby
+* Installed activesupport gem
+* bison
+   
+  # brew install bison  # for OSX
+  # sudo apt-get install bison -y  # Ubuntu
 
 Then install:
 
