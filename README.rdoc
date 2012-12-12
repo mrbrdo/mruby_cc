@@ -2,7 +2,7 @@
 
 Not stable for any kind of use. Buggy.
 
-= Usage
+= Install
 
 You need Ruby 1.9 MRI or compatible installed, because the parser is written
 in Ruby 1.9 (not in mruby).
@@ -12,6 +12,10 @@ in Ruby 1.9 (not in mruby).
   git submodule update
 
   ./setup.sh
+
+The setup.sh script compiles mruby, mrblib, the runner executable.
+
+= Use
 
   echo "puts 'hello world'" > test.rb
   ./mrbcc_compile test.rb
