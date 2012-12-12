@@ -1,4 +1,4 @@
-mrb_value mrbb_main(mrb_state *mrb, mrb_value recv) {
+mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   mrb_callinfo *ci;
   struct RProc *p;
   int ai = mrb->arena_idx;

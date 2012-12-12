@@ -26,7 +26,9 @@
 
 // compiled code
 #include "c_files/out.c"
-#include "c_files/mrbb_main.c"
+
+// function to execute compiled code
+#include "c_files/mrbb_entry_point.c"
 
 int
 main(int argc, char **argv)
@@ -39,16 +41,7 @@ main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  // make it so state knows we are going into a function
-  ci = cipush(mrb);
-  ci->mid = mrb_intern(mrb, "main22");
-  ci->stackidx = mrb->stack - mrb->stbase;
-  ci->argc = 0;
-  ci->nregs = 10; // TODO
-  ci->target_class = ci[-1].target_class; //mrb_class(mrb, mrb_top_self(mrb));
-  ci->acc = -1;
-
-  mrbb_main(mrb);
+  mrbb_exec_entry_point(mrb, mrb_top_self(mrb));
 
   mrb_close(mrb);
   return EXIT_SUCCESS;
