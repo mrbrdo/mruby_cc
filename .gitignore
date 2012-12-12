@@ -24,3 +24,5 @@ tmp_out.mrb
 build/c_files/out.c
 testsuite
 build/mrbcc_out
+*.so
+runner

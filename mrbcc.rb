@@ -43,7 +43,7 @@ end
 puts %x[cd "#{path}/build" && make]
 
 # copy C file
-FileUtils.mv("#{path}/build/mrbcc_out", "#{path}/#{rb_filename_noext}")
+FileUtils.mv("#{path}/build/mrbcc_out.so", "#{path}/#{rb_filename_noext}.so")
 
 # clean up
 FileUtils.rm(rb_filename.gsub(/\.rb$/, ".mrb"), :force => true)

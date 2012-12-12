@@ -4,47 +4,38 @@ Not stable for any kind of use. Buggy.
 
 = Usage
 
+You need Ruby 1.9 MRI or compatible installed, because the parser is written
+in Ruby 1.9 (not in mruby).
+
   git clone git@github.com:mrbrdo/mruby_cc.git
   git submodule init
   git submodule update
 
-  cd mruby && make
-  cd ..
+  ./setup.sh
 
   echo "puts 'hello world'" > test.rb
-  ruby mrbcc.rb test.rb
+  ./mrbcc_compile test.rb
 
-  ./test
-
-Must compile also parts of mrblib (e.g. mruby/mrblib/enum.rb) that you use, because currently interacting with non-compiled code is not working. See Include Mrblib section.
-Note you must use *Ruby* *MRI* to run mrbcc.rb, not mruby!
+  ./runner test.so
 
 = Include Mrblib
 
-You *must* include the whole mrblib (mruby standard library) or your program will not work properly. This is because currently interaction with interpreted code is not working, but it is possible in the future.
+Now mrblib is included automatically.
 
-To include mrblib, add this to the top of your .rb file that you are compiling:
+= Dynamic loading of other files
 
-  #include 'mruby/mrblib/array.rb'
-  #include 'mruby/mrblib/enum.rb'
-  #include 'mruby/mrblib/class.rb'
-  #include 'mruby/mrblib/compar.rb'
-  #include 'mruby/mrblib/error.rb'
-  #include 'mruby/mrblib/hash.rb'
-  #include 'mruby/mrblib/kernel.rb'
-  #include 'mruby/mrblib/numeric.rb'
-  #include 'mruby/mrblib/print.rb'
-  #include 'mruby/mrblib/range.rb'
-  #include 'mruby/mrblib/string.rb'
-  #include 'mruby/mrblib/struct.rb'
+Now it is possible to dynamically load other pre-compiled ruby files.
 
-The #include is just something I made up, it is parsed in mrbcc.rb script. It just takes the file and copies the contents into your main ruby file.
+  load_compiled_mrb "dyn.so"
+
+I recommend you use the full file path.
 
 = Example
 
 Example to run mruby test suite:
 
-  ruby mrbcc.rb testsuite.rb
+  ./mrbcc_compile testsuite.rb
+  ./runner testsuite.so
 
 = Performance on mruby test suite
 

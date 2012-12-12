@@ -12,9 +12,9 @@ BASEDIR = ../mruby/src
 TARGET := ./mrbcc_out
 LIBR := ../mruby/lib/libmruby.a
 ifeq ($(OS),Windows_NT)
-EXE := $(TARGET).exe
+EXE := $(TARGET).dll
 else
-EXE := $(TARGET)
+EXE := $(TARGET).so
 endif
 OBJ0 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/../../build/*.c))
 #OBJ1 := $(patsubst %.c,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.c)))
@@ -59,7 +59,7 @@ all : $(LIBR) $(EXE)
 
 # executable constructed using linker from object files
 $(EXE) : $(LIBR) $(OBJS) $(EXTS)
-	$(LL) -o $@ $(CFLAGS) $(OBJS) $(LIBR) $(EXTS) $(LIBS)
+	$(LL) -shared -o $@ $(CFLAGS) $(OBJS) $(LIBR) $(EXTS) $(LIBS)
 
 -include $(OBJS:.o=.d)
 

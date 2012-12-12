@@ -3,15 +3,20 @@
 
 # project-specific macros
 # extension of the executable-file is modifiable(.exe .out ...)
-BASEDIR = ../../src
-TARGET := ../../bin/mrbcc
-LIBR := ../../lib/libmruby.a
+export CC = gcc
+export LL = gcc
+export AR = ar
+export YACC = bison
+
+BASEDIR = ../mruby/src
+TARGET := ./mrbcc_runner
+LIBR := ../mruby/lib/libmruby.a
 ifeq ($(OS),Windows_NT)
 EXE := $(TARGET).exe
 else
 EXE := $(TARGET)
 endif
-OBJ0 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/../tools/mrbcc/*.c))
+OBJ0 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/../../standalone_runner/*.c))
 #OBJ1 := $(patsubst %.c,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.c)))
 #OBJ2 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/ext/regex/*.c))
 #OBJ3 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/ext/enc/*.c))
@@ -74,8 +79,7 @@ $(EXTS) : %.o : %.c
 # clean up
 .PHONY : clean #cleandep
 clean :
-	$(MAKE) clean -C ../../mrblib $(MAKE_FLAGS)
-	$(MAKE) clean -C ../mrbc $(MAKE_FLAGS)
+	$(MAKE) clean -C ../mruby/mrblib $(MAKE_FLAGS)
 	@echo "make: removing targets, objects and depend files of `pwd`"
 	-$(RM_F) $(EXE) $(OBJS)
 	-$(RM_F) $(OBJS:.o=.d)
