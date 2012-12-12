@@ -34,7 +34,6 @@ int
 main(int argc, char **argv)
 {
   mrb_state *mrb = mrb_open();
-  mrb_callinfo *ci;
 
   if (mrb == NULL) {
     fprintf(stderr, "Invalid mrb_state, exiting driver");

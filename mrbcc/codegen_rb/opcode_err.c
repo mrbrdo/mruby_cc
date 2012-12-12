@@ -2,6 +2,8 @@
       /* sBx    pc+=sBx on exception */
       jmp_buf c_jmp;
       int stoff = mrb->stack - mrb->stbase;
+      int cioff = mrb->ci - mrb->cibase;
+
       if (setjmp(c_jmp) == 0) {
         mrb->jmp = &c_jmp;
         if (mrb->rsize <= mrb->ci->ridx) {
@@ -9,7 +11,7 @@
           else mrb->rsize *= 2;
           mrb->rescue = (mrb_code **)mrb_realloc(mrb, mrb->rescue, sizeof(mrb_code*) * mrb->rsize);
         }
-        mrb->rescue[mrb->ci->ridx++] = &c_jmp;
+        ((jmp_buf **) mrb->rescue)[mrb->ci->ridx++] = &c_jmp;
       }
       else {
         // if rescued from method that was called from this method

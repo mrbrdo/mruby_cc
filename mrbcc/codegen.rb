@@ -13,22 +13,59 @@ class OpcodeParser
     @parser = parser
     @irep_idx = irep_idx
     @opcodes = opcodes
+    @prepend_compiled_ireps = []
   end
 
-  def label(i = nil)
-    i ||= @line_number
+  def label(i)
+    @instructions_referenced[i] = true
     "L_#{@name.upcase}_#{i}"
   end
 
+  def instructions_to_function(instruction_bodies)
+    outio = StringIO.new
+
+    @prepend_compiled_ireps.reverse.each do |str|
+      outio.write(str)
+      outio.write("\n")
+    end
+
+    outio.write(method_prelude)
+    instruction_bodies.each.with_index do |str, idx|
+      outio.write("\n  // #{irep.iseqs[idx]}\n")
+
+      if OpcodeParser::DEBUG_MODE
+        outio.write("  printf(\"#{label(idx)}\\n\"); fflush(stdout);\n")
+        str = <<-EOF
+        printf("X#{label(idx).strip}\\nXstack ptr \%d\\n", mrb->stack - mrb->stbase);
+        printf("Xregs ptr \%d\\n", regs - mrb->stack);
+        EOF
+        #outio.write(str)
+      end
+
+      if @instructions_referenced[idx] || OpcodeParser::DEBUG_MODE
+        outio.write("  #{label(idx)}:")
+      end
+
+      outio.write("\n  ");
+      outio.write(str)
+    end
+    outio.write(method_epilogue)
+
+    outio.string
+  end
+
   def process_irep
-    @outf = StringIO.new
-    @outf.write(method_prelude)
+    instruction_bodies = [] # C code for each opcode
+    @instructions_referenced = [] # true or false if the opcode needs a label
+
     irep.iseqs.each.with_index do |instr, line_number|
       puts instr if DEBUG_MODE_VERBOSE
 
       @instr = instr
       @line_number = line_number
       @opcode = instr.opcode
+
+      @instructions_referenced[@line_number] ||= false
 
       @instr_body = opcodes[@opcode].dup
       if respond_to?(@opcode.downcase)
@@ -67,24 +104,14 @@ class OpcodeParser
       # raise
       @instr_body.gsub!("goto L_RAISE;", "mrbb_raise(mrb, prev_jmp);")
 
-      @outf.write("\n  // #{instr}")
+      instruction_bodies[@line_number] = @instr_body
 
-      @outf.write("\n  #{label}:\n  ")
-      if DEBUG_MODE
-        @outf.write("  printf(\"#{label}\\n\"); fflush(stdout);\n")
-        str = <<-EOF
-        printf("X#{label.strip}\\nXstack ptr \%d\\n", mrb->stack - mrb->stbase);
-        printf("Xregs ptr \%d\\n", regs - mrb->stack);
-        EOF
-        #@outf.write(str)
-      end
-      @outf.write(@instr_body)
     end
-    wrap_body(@outf.string)
+    instructions_to_function(instruction_bodies)
   end
 
-  def wrap_body(body)
-    body += "\n"
+  def method_epilogue
+    body = "\n"
     if @irep_idx == 0
       # TODO look at OP_STOP?
       body += "  return mrb_nil_value();\n"
@@ -139,9 +166,7 @@ class OpcodeParser
     end
 
     parser = OpcodeParser.new(@parser, opcodes, met_name, @irep_idx + @instr.send(arg_name))
-    str = parser.process_irep
-    @outf = StringIO.new(str + @outf.string)
-    @outf.seek(0, IO::SEEK_END)
+    @prepend_compiled_ireps.push(parser.process_irep)
     lambda_arg_precompiled(parser, arg_name)
     parser
   end

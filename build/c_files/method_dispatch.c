@@ -1,4 +1,4 @@
-mrb_value
+void
 mrbb_send_setup_stack_extend(mrb_state *mrb, mrb_value self, mrb_value *argv, int argc)
 {
   mrb->stack = mrb->stack + mrb->ci[-1].nregs;
@@ -79,7 +79,7 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
       mrb->stack = mrb->stbase + stackidx; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
       cipop(mrb);
       cipush(mrb);
-      mrb->ci->proc = -1;
+      mrb->ci->proc = (struct RProc *)-1;
     }
     if (mrb->exc) mrbb_raise(mrb, 0);
   }

@@ -8,11 +8,10 @@
   CASE(OP_SEND) {
       int a = GETARG_A(i);
       int n = GETARG_C(i);
-      mrb_callinfo *prev_ci = mrb->ci - mrb->cibase;
       mrb_value ret;
 
       ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 0);
-      if (mrb->ci->proc == -1) {
+      if (mrb->ci->proc == (struct RProc *) -1) {
         //cipush(mrb);
         return ret;
       }
@@ -23,11 +22,10 @@
   CASE(OP_SENDB) {
       int a = GETARG_A(i);
       int n = GETARG_C(i);
-      mrb_callinfo *prev_ci = mrb->ci - mrb->cibase;
       mrb_value ret;
 
       ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 1);
-      if (mrb->ci->proc == -1) {
+      if (mrb->ci->proc == (struct RProc *) -1) {
         //cipush(mrb);
         return ret;
       }
@@ -61,7 +59,7 @@
     CASE(OP_RETURN) {
       {
         mrb_callinfo *ci = mrb->ci;
-        int acc, eidx = mrb->ci->eidx;
+        int eidx = mrb->ci->eidx;
         mrb_value v = regs[GETARG_A(i)];
 
         if (mrb->exc) {
@@ -108,8 +106,6 @@
           return v;
         }
         */
-        // TODO optimize (cipop in funcall)
-        // important with OP_RETURN break
         return v;
       }
     }
