@@ -16,6 +16,9 @@ You need:
   * OSX: brew install bison
   * Ubuntu: apt-get install libbison-dev
 
+    # brew install bison  # for OSX
+    # sudo apt-get install bison libbison-dev -y  # Ubuntu
+
 Then install:
 
   git clone git@github.com:mrbrdo/mruby_cc.git
