@@ -51,6 +51,11 @@ Example to run mruby test suite:
 
 No, right now this does not work well. But it should be possible in the future.
 
+= Can I call C code?
+
+You can compile a .so with an extern mrbb_exec_entry_point, then you can load this module
+with load_compiled_mrb. For more details look at the build/mrbcc_out.c file.
+
 = Performance on mruby test suite
 
 Compiled
