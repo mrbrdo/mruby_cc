@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 
-int mrbcc_load_so(mrb_state *mrb, mrb_value self, const char *filename) {
+mrb_value mrbcc_load_so(mrb_state *mrb, mrb_value self, const char *filename) {
   void *handle;
   mrb_value (*entry_point)(mrb_state*, mrb_value);
   mrb_value ary;
@@ -16,32 +16,29 @@ int mrbcc_load_so(mrb_state *mrb, mrb_value self, const char *filename) {
   handle = dlopen(filename, RTLD_LAZY);
   if (!handle) {
     fprintf (stderr, "%s\n", dlerror());
-    return 1;
+    return mrb_nil_value();
   }
   dlerror();    /* Clear any existing error */
   entry_point = dlsym(handle, "mrbb_exec_entry_point");
   if ((error = dlerror()) != NULL)  {
     fprintf (stderr, "%s\n", error);
-    return 1;
+    return mrb_nil_value();
   }
   ary = mrb_iv_get(mrb, mrb_obj_value(mrb->kernel_module),
     mrb_intern(mrb, "@loaded_compiled_mrb_handles"));
   mrb_ary_push(mrb, ary, mrb_fixnum_value((mrb_int) handle)); // TODO warning
-  (*entry_point)(mrb, self);
-  return 0;
+  return (*entry_point)(mrb, self);
 }
 
 static mrb_value rb_load_compiled_mrb(mrb_state *mrb, mrb_value self)
 {
   mrb_value rstr;
   const char *str;
-  int ret;
 
   mrb_get_args(mrb, "S", &rstr);
   str = mrb_string_value_ptr(mrb, rstr);
 
-  ret = mrbcc_load_so(mrb, self, str);
-  return mrb_fixnum_value(ret);
+  return mrbcc_load_so(mrb, self, str);
 }
 
 int
