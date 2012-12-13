@@ -27,7 +27,7 @@ OBJS := $(OBJ0)
 EXTS := $(EXT1)
 
 # libraries, includes
-LIBS = -lm
+LIBS = -lm -ldl
 INCLUDES = -I$(BASEDIR) -I$(BASEDIR)/../include
 
 # compiler, linker (gcc)
