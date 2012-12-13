@@ -88,7 +88,7 @@ class OpcodeParser
         val = case val
         when Float
           "mrb_float_value(#{val})"
-        when Fixnum
+        when Numeric
           "mrb_fixnum_value(#{val})"
         when String
           # TODO fix this so we can load binary strings too
