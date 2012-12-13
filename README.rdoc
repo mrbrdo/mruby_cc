@@ -1,6 +1,6 @@
 = Status
 
-Not stable for any kind of use. Buggy.
+Stable enough for testing, but not tested enough for production use.
 
 = Install
 
