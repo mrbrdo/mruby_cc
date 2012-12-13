@@ -13,7 +13,9 @@ mrb_value mrbcc_load_so(mrb_state *mrb, mrb_value self, const char *filename) {
   mrb_value (*entry_point)(mrb_state*, mrb_value);
   mrb_value ary;
   char *error;
-  handle = dlopen(filename, RTLD_LAZY);
+  char fullpath[1024];
+  realpath(filename, fullpath);
+  handle = dlopen(fullpath, RTLD_LAZY);
   if (!handle) {
     fprintf (stderr, "%s\n", dlerror());
     return mrb_nil_value();
