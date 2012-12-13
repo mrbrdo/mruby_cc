@@ -8,8 +8,7 @@ You need:
 
 * Ruby 1.9 or compatible
 
-    gem install activesupport
-    gem install i18n
+    gem install activesupport i18n
 
 * gcc and be able to compile mruby
   * bison development package
