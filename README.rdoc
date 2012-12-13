@@ -47,6 +47,10 @@ Example to run mruby test suite:
   ./mrbcc_compile testsuite.rb
   ./runner testsuite.so
 
+= Can I use compiled and non-compiled mruby code at the same time?
+
+No, right now this does not work well. But it should be possible in the future.
+
 = Performance on mruby test suite
 
 Compiled
