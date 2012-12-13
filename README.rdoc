@@ -11,9 +11,6 @@ You need:
     gem install activesupport i18n
 
 * gcc and be able to compile mruby
-  * bison development package
-  * OSX: brew install bison
-  * Ubuntu: apt-get install libbison-dev
 
     # brew install bison  # for OSX
     # sudo apt-get install bison libbison-dev -y  # Ubuntu
