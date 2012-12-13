@@ -7,7 +7,9 @@ Stable enough for testing, but not tested enough for production use.
 You need:
 
 * Ruby 1.9 or compatible
+  * activesupport gem
 * gcc and be able to compile mruby
+  * bison development package (OSX: brew install bison)
 
 Then install:
 
