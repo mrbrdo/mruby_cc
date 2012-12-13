@@ -18,7 +18,7 @@ You need:
 Then install:
 
     git clone git://github.com/mrbrdo/mruby_cc.git
-    cd mruby
+    cd mruby_cc
     gem install activesupport i18n
     git submodule init
     git submodule update
