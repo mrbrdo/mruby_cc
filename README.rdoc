@@ -7,9 +7,14 @@ Stable enough for testing, but not tested enough for production use.
 You need:
 
 * Ruby 1.9 or compatible
-  * activesupport gem
+
+  gem install activesupport
+  gem install i18n
+
 * gcc and be able to compile mruby
-  * bison development package (OSX: brew install bison)
+  * bison development package
+  * OSX: brew install bison
+  * Ubuntu: apt-get install libbison-dev
 
 Then install:
 
