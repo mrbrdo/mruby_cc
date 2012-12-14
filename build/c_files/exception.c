@@ -61,6 +61,11 @@ void mrbb_stop(mrb_state *mrb) {
 
 void mrbb_rescue_push(mrb_state *mrb, jmp_buf *c_jmp) {
   jmp_buf *c_jmp_copy = (jmp_buf *)malloc(sizeof(jmp_buf));
+  if (mrb->rsize <= mrb->ci->ridx) {
+    if (mrb->rsize == 0) mrb->rsize = 16;
+    else mrb->rsize *= 2;
+    mrb->rescue = (mrb_code **)mrb_realloc(mrb, mrb->rescue, sizeof(mrb_code*) * mrb->rsize);
+  }
   memmove(c_jmp_copy, c_jmp, sizeof(jmp_buf));
   ((jmp_buf **) mrb->rescue)[mrb->ci->ridx++] = c_jmp_copy;
 }

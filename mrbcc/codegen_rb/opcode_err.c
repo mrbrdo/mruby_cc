@@ -6,11 +6,6 @@
 
       if (setjmp(c_jmp) == 0) {
         mrb->jmp = &c_jmp;
-        if (mrb->rsize <= mrb->ci->ridx) {
-          if (mrb->rsize == 0) mrb->rsize = 16;
-          else mrb->rsize *= 2;
-          mrb->rescue = (mrb_code **)mrb_realloc(mrb, mrb->rescue, sizeof(mrb_code*) * mrb->rsize);
-        }
         mrbb_rescue_push(mrb, &c_jmp);
       }
       else {

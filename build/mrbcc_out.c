@@ -45,6 +45,8 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
     return mrb_obj_value(mrb->exc);
   }
 
+  mrbb_rescue_push(mrb, &c_jmp);
+
   if (!mrb->stack) {
     stack_init(mrb);
   }
@@ -78,6 +80,8 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
 
   mrb->stack = mrb->stbase + mrb->ci->stackidx;
   cipop(mrb);
+
+  mrbb_rescue_pop(mrb);
 
   return result;
 }
