@@ -6,9 +6,9 @@
 export CC = gcc
 export LL = gcc
 export AR = ar
-export YACC = bison
 
 BASEDIR = ../mruby/src
+BUILDDIR = .
 TARGET := ./mrbcc_out
 LIBR := ../mruby/lib/libmruby.a
 ifeq ($(OS),Windows_NT)
@@ -16,15 +16,8 @@ EXE := $(TARGET).dll
 else
 EXE := $(TARGET).so
 endif
-OBJ0 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/../../build/*.c))
-#OBJ1 := $(patsubst %.c,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.c)))
-#OBJ2 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/ext/regex/*.c))
-#OBJ3 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/ext/enc/*.c))
+OBJ0 := $(patsubst %.c,%.o,$(BUILDDIR)/mrbcc_out.c)
 OBJS := $(OBJ0)
-
-# ext libraries
-#EXT1 := $(patsubst %.c,%.o,$(wildcard $(BASEDIR)/../ext/socket/*.c))
-EXTS := $(EXT1)
 
 # libraries, includes
 LIBS = -lm
@@ -32,23 +25,23 @@ INCLUDES = -I$(BASEDIR) -I$(BASEDIR)/../include
 
 # compiler, linker (gcc)
 ifeq ($(strip $(COMPILE_MODE)),)
-  # default compile option
-  COMPILE_MODE = debug
+	# default compile option
+	COMPILE_MODE = debug
 endif
 
 ifeq ($(COMPILE_MODE),debug)
-  CFLAGS = -g -O3
+	CFLAGS = -g -O3
 else ifeq ($(COMPILE_MODE),release)
-  CFLAGS = -O3
+	CFLAGS = -O3
 else ifeq ($(COMPILE_MODE),small)
-  CFLAGS = -Os
+	CFLAGS = -Os
 endif
 
 ALL_CFLAGS = -Wall -Werror-implicit-function-declaration $(CFLAGS)
 ifeq ($(OS),Windows_NT)
-  MAKE_FLAGS = CC=$(CC) LL=$(LL) ALL_CFLAGS="$(ALL_CFLAGS)"
+	MAKE_FLAGS = CC=$(CC) LL=$(LL) ALL_CFLAGS="$(ALL_CFLAGS)"
 else
-  MAKE_FLAGS = CC='$(CC)' LL='$(LL)' ALL_CFLAGS='$(ALL_CFLAGS)'
+	MAKE_FLAGS = CC='$(CC)' LL='$(LL)' ALL_CFLAGS='$(ALL_CFLAGS)'
 endif
 
 ##############################
@@ -59,7 +52,7 @@ all : $(LIBR) $(EXE)
 
 # executable constructed using linker from object files
 $(EXE) : $(LIBR) $(OBJS) $(EXTS)
-	$(LL) -shared -o $@ $(CFLAGS) $(OBJS) $(LIBR) $(EXTS) $(LIBS)
+	$(LL) -shared -o $@ $(CFLAGS) $(OBJS) $(LIBR) $(LIBS)
 
 -include $(OBJS:.o=.d)
 
@@ -71,15 +64,10 @@ $(OBJS) : %.o : %.c
 $(LIBR) :
 	@$(MAKE) -C $(BASEDIR) $(MAKE_FLAGS)
 
-# mrbcc library compile
-# extend libraries complile
-$(EXTS) : %.o : %.c
-	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $< -o $@
-
 # clean up
 .PHONY : clean #cleandep
 clean :
 	$(MAKE) clean -C ../mruby/mrblib $(MAKE_FLAGS)
 	@echo "make: removing targets, objects and depend files of `pwd`"
-	-$(RM_F) $(EXE) $(OBJS)
-	-$(RM_F) $(OBJS:.o=.d)
+	rm -f $(EXE) $(OBJS)
+	rm -f $(OBJS:.o=.d)
