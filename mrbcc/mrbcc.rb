@@ -20,6 +20,7 @@ BUILD_DIR = File.expand_path("../../build", __FILE__)
 
 puts "Compiling..."
 
+FileUtils.mkdir_p(TMP_DIR)
 opcodes = MrbOpcodes.new(MRUBY_PATH)
 
 # preparse file so we can #include

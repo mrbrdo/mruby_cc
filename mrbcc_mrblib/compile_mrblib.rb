@@ -7,7 +7,7 @@ File.open(tmp_fn, "w") do |outf|
   end
 end
 
-%x[cd ../ && ruby mrbcc.rb tmp_mrblib.rb]
+%x[cd ../ && ./mrbcc_compile tmp_mrblib.rb]
 
 out_fn = File.expand_path("../../tmp_mrblib.so", __FILE__)
 lib_fn = File.expand_path("../mrblib.so", __FILE__)
