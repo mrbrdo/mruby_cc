@@ -39,10 +39,6 @@ You should probably re-run setup.sh when you git pull.
 
 Now mrblib is included automatically.
 
-= Known bigger bugs
-
-* On Linux 2 tests from mruby test suite don't pass. (they pass on OSX) Working on it.
-
 = Dynamic loading of other files
 
 Now it is possible to dynamically load other pre-compiled ruby files.

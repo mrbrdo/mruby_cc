@@ -11,7 +11,7 @@
           else mrb->rsize *= 2;
           mrb->rescue = (mrb_code **)mrb_realloc(mrb, mrb->rescue, sizeof(mrb_code*) * mrb->rsize);
         }
-        ((jmp_buf **) mrb->rescue)[mrb->ci->ridx++] = &c_jmp;
+        mrbb_rescue_push(mrb, &c_jmp);
       }
       else {
         // if rescued from method that was called from this method
@@ -23,7 +23,7 @@
         regs = mrb->stack;
 
         // go to rescue
-        mrb->ci->ridx--;
+        mrbb_rescue_pop(mrb);
         mrb->jmp = (jmp_buf *)mrb->rescue[mrb->ci->ridx-1];
         goto rescue_label(GETARG_sBx(i));
       }
@@ -35,7 +35,7 @@
       int a = GETARG_A(i);
 
       while (a--) {
-        mrb->ci->ridx--;
+        mrbb_rescue_pop(mrb);
       }
       NEXT;
     }

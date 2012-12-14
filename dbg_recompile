@@ -1,0 +1,6 @@
+#!/bin/sh
+cd build
+make
+cd ..
+
+mv build/mrbcc_out.so ./out.so

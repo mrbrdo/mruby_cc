@@ -51,6 +51,30 @@ void mrbb_stop(mrb_state *mrb) {
   printf("goto L_STOP\n");
   exit(0);
 }
+
+/*
+  Because c_jmp is a variable that is local to the scope of
+  the OP_ONERR code part, it is necessary to copy it, because
+  it may otherwise get overwritten. Specifically this happened
+  on Linux, but not on OSX.
+*/
+
+void mrbb_rescue_push(mrb_state *mrb, jmp_buf *c_jmp) {
+  jmp_buf *c_jmp_copy = (jmp_buf *)malloc(sizeof(jmp_buf));
+  memmove(c_jmp_copy, c_jmp, sizeof(jmp_buf));
+  ((jmp_buf **) mrb->rescue)[mrb->ci->ridx++] = c_jmp_copy;
+}
+
+/*
+  Must free memory allocated for the jmp_buf.
+*/
+
+void mrbb_rescue_pop(mrb_state *mrb) {
+  jmp_buf *c_jmp = ((jmp_buf **) mrb->rescue)[mrb->ci->ridx-1];
+  mrb->ci->ridx--;
+  free(c_jmp);
+}
+
 void mrbb_raise(mrb_state *mrb, jmp_buf *prev_jmp) {
   // stolen from OP_RETURN
   mrb_callinfo *ci;

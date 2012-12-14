@@ -33,20 +33,21 @@ class OpcodeParser
     instruction_bodies.each.with_index do |str, idx|
       outio.write("\n  // #{irep.iseqs[idx]}\n")
 
-      if OpcodeParser::DEBUG_MODE
-        outio.write("  printf(\"#{label(idx)}\\n\"); fflush(stdout);\n")
-        str = <<-EOF
-        printf("X#{label(idx).strip}\\nXstack ptr \%d\\n", mrb->stack - mrb->stbase);
-        printf("Xregs ptr \%d\\n", regs - mrb->stack);
-        EOF
-        #outio.write(str)
-      end
-
       if @instructions_referenced[idx] || OpcodeParser::DEBUG_MODE
         outio.write("  #{label(idx)}:")
       end
 
       outio.write("\n  ");
+
+      if OpcodeParser::DEBUG_MODE
+        outio.write("  printf(\"#{label(idx)}\\n\"); fflush(stdout);\n")
+        str2 = <<-EOF
+        printf("X#{label(idx).strip}\\nXstack ptr \%d\\n", mrb->stack - mrb->stbase);
+        printf("Xregs ptr \%d\\n", regs - mrb->stack);
+        EOF
+        #outio.write(str2)
+      end
+
       outio.write(str)
     end
     outio.write(method_epilogue)
