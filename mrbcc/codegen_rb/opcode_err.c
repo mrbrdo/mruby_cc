@@ -13,9 +13,7 @@
         // and didn't have its own rescue
         // fix global state, be careful if stbase or cibase changed
         mrb->ci = mrb->cibase + cioff;
-        mrb->stack = mrb->stbase + stoff;
-        ci = mrb->ci;
-        regs = mrb->stack;
+        regs = mrb->stack = mrb->stbase + stoff;
 
         // go to rescue
         mrbb_rescue_pop(mrb);

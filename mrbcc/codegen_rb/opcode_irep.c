@@ -45,7 +45,7 @@
 
       mrb->stack[0] = p->body.func(mrb, recv);
       mrb->arena_idx = ai;
-      if (mrb->exc) mrbb_raise(mrb, prev_jmp);
+      if (mrb->exc) mrbb_raise(mrb);
       /* pop stackpos */
       regs = mrb->stack = mrb->stbase + mrb->ci->stackidx;
       cipop(mrb);

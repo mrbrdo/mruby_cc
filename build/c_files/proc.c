@@ -25,7 +25,7 @@ ci->mid = m->env->mid;
   if (MRB_PROC_CFUNC_P(m)) {
     recv = m->body.func(mrb, m->env->stack[0]);
     mrb->arena_idx = ai;
-    if (mrb->exc) mrbb_raise(mrb, 0);
+    if (mrb->exc) mrbb_raise(mrb);
     /* pop stackpos */
     // already done by funcall
 //ci = mrb->ci;

@@ -60,10 +60,12 @@
       {
         mrb_callinfo *ci = mrb->ci;
         int eidx = mrb->ci->eidx;
+        int ridx = mrb->ci->ridx;
         mrb_value v = regs[GETARG_A(i)];
+        struct RProc *proc = mrb->ci->proc;
 
         if (mrb->exc) {
-          mrbb_raise(mrb, 0);
+          mrbb_raise(mrb);
         }
 
         switch (GETARG_B(i)) {
@@ -99,7 +101,9 @@
         while (eidx > mrb->ci[-1].eidx) {
           mrbb_ecall(mrb, mrb->ensure[--eidx]);
         }
-        mrb->jmp = prev_jmp;
+        while (ridx > mrb->ci[-1].ridx) { // just in case?
+          mrbb_rescue_pop(mrb);
+        }
         /*
         if (acc < 0) {
           mrb->jmp = prev_jmp;

@@ -41,7 +41,7 @@ stack_extend(mrb_state *mrb, int room, int keep)
       const char *msg = "stack level too deep."; // TODO: tell limit
       mrb_value exc = mrb_exc_new(mrb, E_RUNTIME_ERROR, msg, strlen(msg));
       mrb->exc = (struct RObject*)mrb_object(exc);
-      mrbb_raise(mrb, 0);
+      mrbb_raise(mrb);
     }
   }
 

@@ -92,7 +92,7 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
         mrb->stack = mrb->stbase + mrb->ci->stackidx;
         cipop(mrb);
     }*/
-    if (mrb->exc) mrbb_raise(mrb, 0); // we can do this before cipop... see OP_SEND
+    if (mrb->exc) mrbb_raise(mrb); // we can do this before cipop... see OP_SEND
   }
   else {
     mrb_irep *irep = m->body.irep;

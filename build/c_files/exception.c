@@ -80,7 +80,7 @@ void mrbb_rescue_pop(mrb_state *mrb) {
   free(c_jmp);
 }
 
-void mrbb_raise(mrb_state *mrb, jmp_buf *prev_jmp) {
+void mrbb_raise(mrb_state *mrb) {
   // stolen from OP_RETURN
   mrb_callinfo *ci;
   int eidx;

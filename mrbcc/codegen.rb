@@ -103,7 +103,7 @@ class OpcodeParser
         end
       end
       # raise
-      @instr_body.gsub!("goto L_RAISE;", "mrbb_raise(mrb, prev_jmp);")
+      @instr_body.gsub!("goto L_RAISE;", "mrbb_raise(mrb);")
 
       instruction_bodies[@line_number] = @instr_body
 
