@@ -6,6 +6,22 @@ Stable enough for testing, but not tested enough for production use.
 
 https://github.com/mrbrdo/mruby_cc/wiki/Install
 
+= Advantages
+
+* improved performance, obviously
+* code is shipped in binary form
+  * virtually impossible to get back the original ruby code, because the binary code is compiled from mruby bytecode
+  * 3rd party binary obfuscators can be used to make it virtually impossible to recover even the bytecode from which it was compiled
+
+= Disadvantages
+
+* code is shipped in binary form
+  * need to provide precompiled version for each platform, or compile on the fly (currently, this requires gcc or some compiler present on target machine)
+  * it is not possible to ensure that the compiled file includes only ruby code, malicious users could include anything - solution is for vendor to oversee user-provided scripts, or to not allow user scripts, also to check CRC of binary to confirm authenticity
+* larger size of binary compared to ruby source file
+  * about 300-500KB for typical script
+  * compression should be very efficient, especially when compressing multiple files
+
 = Use
 
   echo "puts 'hello world'" > test.rb
