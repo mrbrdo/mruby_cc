@@ -64,43 +64,9 @@ No, right now this does not work well. But it should be possible in the future.
 You can compile a .so with an extern mrbb_exec_entry_point, then you can load this module
 with load_compiled_mrb. For more details look at the build/mrbcc_out.c file.
 
-= Performance on mruby test suite
-
-Compiled
-
-  Total: 499
-     OK: 499
-     KO: 0
-  Crash: 0
-   Time: 0.009083 seconds
-
-mruby interpreted
-
-  Total: 499
-     OK: 499
-     KO: 0
-  Crash: 0
-  Time: 0.566691 seconds
-
-Pretty good :-)
-
 = Performance
 
-Right now the performance of method calling should be improved. But we can see some performance improvement with tight loops (note I use while because each will use method calling on Proc).
+Wiki page:
 
-  i = 0
+https://github.com/mrbrdo/mruby_cc/wiki/Performance
 
-  while i < 1000000000
-    5 * 1.7
-    i += 1
-  end
-
-  puts i
-
-Compiled
-
-  real  0m12.952s
-
-Mruby interpreter
-
-  real  1m14.385s
