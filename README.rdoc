@@ -6,6 +6,13 @@ Stable enough for testing, but not tested enough for production use.
 
 https://github.com/mrbrdo/mruby_cc/wiki/Install
 
+= Use
+
+  echo "puts 'hello world'" > test.rb
+  ./mrbcc_compile test.rb
+
+  ./runner test.so
+
 = Advantages and disadvantages
 
 *Advantages*
@@ -14,6 +21,7 @@ https://github.com/mrbrdo/mruby_cc/wiki/Install
 * code is shipped in binary form
   * virtually impossible to get back the original ruby code, because the binary code is compiled from mruby bytecode
   * 3rd party binary obfuscators can be used to make it virtually impossible to recover even the bytecode from which it was compiled
+* output is a C file, which can be manually optimized if necessary (this is an extreme case however)
 
 *Disadvantages*
 
@@ -23,13 +31,6 @@ https://github.com/mrbrdo/mruby_cc/wiki/Install
 * larger size of binary compared to ruby source file
   * about 300-500KB for typical script
   * compression should be very efficient, especially when compressing multiple files
-
-= Use
-
-  echo "puts 'hello world'" > test.rb
-  ./mrbcc_compile test.rb
-
-  ./runner test.so
 
 = Dynamic loading of other files
 
