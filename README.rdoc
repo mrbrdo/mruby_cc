@@ -1,4 +1,8 @@
-= Status
+= What
+
+This enables translating mruby code into C code (not necessarily human readable).
+The main benefit is increased performance. We cannot achieve performance of real programmer-written C code,
+but we can improve on performance of interpreted mruby.
 
 Stable enough for testing, but not tested enough for production use.
 
