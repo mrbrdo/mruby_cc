@@ -35,10 +35,6 @@ You should probably re-run setup.sh when you git pull.
 
   ./runner test.so
 
-= Include Mrblib
-
-Now mrblib is included automatically.
-
 = Dynamic loading of other files
 
 Now it is possible to dynamically load other pre-compiled ruby files.
@@ -48,25 +44,15 @@ Now it is possible to dynamically load other pre-compiled ruby files.
 
 I recommend you use the full file path.
 
-= Example
+= Examples
 
-Example to run mruby test suite:
+https://github.com/mrbrdo/mruby_cc/wiki/Examples
 
-  ./mrbcc_compile testsuite.rb
-  ./runner testsuite.so
+= FAQ
 
-= Can I use compiled and non-compiled mruby code at the same time?
-
-No, right now this does not work well. But it should be possible in the future.
-
-= Can I call C code?
-
-You can compile a .so with an extern mrbb_exec_entry_point, then you can load this module
-with load_compiled_mrb. For more details look at the build/mrbcc_out.c file.
+https://github.com/mrbrdo/mruby_cc/wiki/FAQ
 
 = Performance
-
-Wiki page:
 
 https://github.com/mrbrdo/mruby_cc/wiki/Performance
 
