@@ -8,14 +8,14 @@ https://github.com/mrbrdo/mruby_cc/wiki/Install
 
 = Advantages and disadvantages
 
-Advantages
+*Advantages*
 
 * improved performance, obviously
 * code is shipped in binary form
   * virtually impossible to get back the original ruby code, because the binary code is compiled from mruby bytecode
   * 3rd party binary obfuscators can be used to make it virtually impossible to recover even the bytecode from which it was compiled
 
-Disadvantages
+*Disadvantages*
 
 * code is shipped in binary form
   * need to provide precompiled version for each platform, or compile on the fly (currently, this requires gcc or some compiler present on target machine)
