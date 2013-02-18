@@ -10,7 +10,7 @@ export AR = ar
 BASEDIR = ../mruby/src
 BUILDDIR = .
 TARGET := ./mrbcc_out
-LIBR := ../mruby/lib/libmruby.a
+LIBR := ../mruby/build/host/lib/libmruby.a
 ifeq ($(OS),Windows_NT)
 EXE := $(TARGET).dll
 else
