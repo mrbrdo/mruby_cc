@@ -22,6 +22,16 @@ test -z "$ruby_minor_version" && AC_MSG_FAILURE([ruby in \$PATH does not work])
 test "$ruby_major_version" -lt 1 && AC_MSG_FAILURE([ruby version in \$PATH is $ruby_version; must be at least 1.9])
 test "$ruby_minor_version" -lt 9 && AC_MSG_FAILURE([ruby version in \$PATH is $ruby_version; must be at least 1.9])
 
+dnl Ensure ruby gems: activesupport i18n.
+AC_MSG_CHECKING([for ruby gem activesupport])
+echo 'gem = Gem::Specification.find_by_name("activesupport")' | $RUBY 2>/dev/null ; gem_activesupport=$?
+if test "$gem_activesupport" -eq 0 ; then AC_MSG_RESULT([ok]) ;
+else AC_MSG_RESULT([no]) ; AC_MSG_FAILURE([ruby gem activesupport not found]) ; fi
+AC_MSG_CHECKING([for ruby gem i18n])
+echo 'gem = Gem::Specification.find_by_name("i18n")' | $RUBY 2>/dev/null ; gem_i18n=$?
+if test "$gem_i18n" -eq 0 ; then AC_MSG_RESULT([ok]) ;
+else AC_MSG_RESULT([no]) ; AC_MSG_FAILURE([ruby gem i18n not found]) ; fi
+
 dnl Ensure git.
 AC_ARG_WITH(git,
 	AC_HELP_STRING([--with-git=[[[GIT]]]],[absolute path to git executable]),
