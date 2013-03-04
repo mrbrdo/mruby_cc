@@ -13,9 +13,9 @@ AC_ARG_WITH(ruby,
 AC_CHECK_PROG(RUBY, ruby, ruby)
 test -z "$RUBY" && AC_MSG_FAILURE([no acceptable ruby interpreter found in \$PATH])
 changequote(<<,>>)
-ruby_version=`$RUBY --version 2>&1 | $GREP "^ruby " | $SED -e 's/^ruby \([0-9]*\.[0-9]*\.[0-9]*\(p[0-9]*\)\).*$/\1/'`
-ruby_major_version=`echo $ruby_version | sed 's/\([0-9]*\)\.[0-9]*\.[0-9]*p[0-9]*/\1/'`
-ruby_minor_version=`echo $ruby_version | sed 's/[0-9]*\.\([0-9]*\)\.[0-9]*p[0-9]*/\1/'`
+ruby_version=`$RUBY --version 2>&1 | $GREP "^ruby " | $SED 's/^ruby \([^ ]*\)\ .*$/\1/'`
+ruby_major_version=`echo $ruby_version | sed 's/^\([0-9]*\)\.[0-9]*.*/\1/'`
+ruby_minor_version=`echo $ruby_version | sed 's/^[0-9]*\.\([0-9]*\).*/\1/'`
 changequote([,])
 test -z "$ruby_major_version" && AC_MSG_FAILURE([ruby in \$PATH does not work])
 test -z "$ruby_minor_version" && AC_MSG_FAILURE([ruby in \$PATH does not work])
