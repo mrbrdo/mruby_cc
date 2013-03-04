@@ -1,0 +1,26 @@
+PREFIX		= @prefix@
+EXEC_PREFIX	= @exec_prefix@
+
+BINDIR		= @bindir@
+LIBDIR		= @libdir@
+
+GIT		= @GIT@
+
+all		: mruby
+
+.PHONY		: mruby
+mruby		: mruby/.git
+	$(MAKE) -C mruby
+
+mruby/.git	:
+	$(GIT) submodule init
+	$(GIT) submodule update
+
+.PHONY		: clean
+clean		:
+	rm -f *~
+
+.PHONY		: distclean
+distclean	: clean
+	rm -fr autom4te.cache config.log config.status
+	rm -fr Makefile
