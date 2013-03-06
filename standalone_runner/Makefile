@@ -10,7 +10,7 @@ export YACC = bison
 
 BASEDIR = ../mruby/src
 TARGET := ./mrbcc_runner
-LIBR := ../mruby/lib/libmruby.a
+LIBR := ../mruby/build/host/lib/libmruby.a
 ifeq ($(OS),Windows_NT)
 EXE := $(TARGET).exe
 else
