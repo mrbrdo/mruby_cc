@@ -1,4 +1,5 @@
 AC_INIT([mrbcc],[0.1])
+AC_CONFIG_AUX_DIR([build-aux])
 
 dnl Needed to compile mruby.
 AC_PROG_CC()
@@ -38,6 +39,8 @@ AC_ARG_WITH(git,
 	[GIT="$withval"])
 AC_CHECK_PROG(GIT, git, git)
 test -z "$GIT" && AC_MSG_WARN([git not found; mruby source must be provided manually])
+
+AC_PROG_INSTALL
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
