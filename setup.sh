@@ -1,9 +1,5 @@
 #!/bin/sh
 
-cd mruby
-make
-cd ..
-
 cd mrbcc_mrblib
 ruby compile_mrblib.rb
 mv mrblib.so ../

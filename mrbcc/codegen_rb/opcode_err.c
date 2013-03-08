@@ -38,6 +38,7 @@
       struct RProc *p;
 
       p = mrbb_closure_new(mrb, GETARG_Bx(i), (unsigned int)GETIREP_NLOCALS());
+      p->target_class = mrb_class(mrb, self);
       /* push ensure_stack */
       if (mrb->esize <= mrb->ci->eidx) {
         if (mrb->esize == 0) mrb->esize = 16;

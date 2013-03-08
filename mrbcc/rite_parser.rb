@@ -171,6 +171,7 @@ class RiteParser
     :MRB_TT_SYMBOL,
     :MRB_TT_UNDEF,
     :MRB_TT_FLOAT,
+    :MRB_TT_VOIDP,
     :MRB_TT_MAIN,
     :MRB_TT_OBJECT,
     :MRB_TT_CLASS,
