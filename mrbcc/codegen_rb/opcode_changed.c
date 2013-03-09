@@ -74,21 +74,25 @@
             struct REnv *e = top_env(mrb, proc);
 
             if (e->cioff < 0) {
-              localjump_error(mrb, "return");
+              localjump_error(mrb, LOCALJUMP_ERROR_RETURN);
               goto L_RAISE;
             }
             mrb->ci = mrb->cibase + e->cioff;
+            if (ci == mrb->cibase) {
+              localjump_error(mrb, LOCALJUMP_ERROR_RETURN);
+              goto L_RAISE;
+            }
             break;
           }
         case OP_R_NORMAL:
           if (ci == mrb->cibase) {
-            localjump_error(mrb, "return");
+            localjump_error(mrb, LOCALJUMP_ERROR_RETURN);
             goto L_RAISE;
           }
           break;
         case OP_R_BREAK:
           if (proc->env->cioff < 0) {
-            localjump_error(mrb, "break");
+            localjump_error(mrb, LOCALJUMP_ERROR_BREAK);
             goto L_RAISE;
           }
           mrb->ci = mrb->cibase + proc->env->cioff + 1;
