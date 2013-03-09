@@ -29,8 +29,12 @@ class OpcodeParser
       "mrb_fixnum_value(#{val})"
     when String
       # TODO fix this so we can load binary strings too
-      val.gsub!('"', '\\"');
-      "mrb_str_new(mrb, \"#{val}\", #{val.length})"
+      val.gsub!('"', '\\"')
+
+      real_str = val.gsub(/(?<!\\)#/, "\\#")
+      real_str = eval("\"#{real_str}\"")
+
+      "mrb_str_new(mrb, \"#{val}\", #{real_str.length})"
     when Regexp
       # TODO
       raise
