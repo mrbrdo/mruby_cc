@@ -8,13 +8,16 @@ Preparser.preparse(rb_filename, "tmp/tmp_out.rb")
 # run
 durations_separator = 'Durations:'
 
+puts "Running with mruby..."
 output = %x[mruby/bin/mruby tmp/tmp_out.rb]
 idx = output.index(durations_separator)
 perf_mruby = if idx
   eval(output[idx + durations_separator.length, output.length].strip)
 end
 
+puts "Compiling with mruby_cc..."
 %x[./mrbcc_compile test/performance_test.rb]
+puts "Running with mruby_cc..."
 output = %x[./runner test/performance_test.so]
 idx = output.index(durations_separator)
 perf_mruby_cc = if idx

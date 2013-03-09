@@ -28,3 +28,4 @@ runner
 config.log
 config.status
 Makefile
+perf_test_results.txt
