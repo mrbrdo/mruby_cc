@@ -5,7 +5,6 @@
 #include "mruby/hash.h"
 #include "mruby/dump.h"
 #include "mruby/range.h"
-// #include "mruby/cdump.h"
 #include "mruby/compile.h"
 #include "mruby/variable.h"
 #include "mruby/string.h"
