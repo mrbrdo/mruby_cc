@@ -21,8 +21,34 @@ class OpcodeParser
     "L_#{@name.upcase}_#{i}"
   end
 
+  def value_from_pool_to_code(val)
+    case val
+    when Float
+      "mrb_float_value(#{val})"
+    when Numeric
+      "mrb_fixnum_value(#{val})"
+    when String
+      # TODO fix this so we can load binary strings too
+      val.gsub!('"', '\\"');
+      "mrb_str_new(mrb, \"#{val}\", #{val.length})"
+    when Regexp
+      # TODO
+      raise
+    else
+      val
+    end
+  end
+
   def instructions_to_function(instruction_bodies)
     outio = StringIO.new
+
+    # pool and syms
+    if @irep_idx == 0
+      @parser.ireps.each.with_index do |current_irep, idx|
+        outio.write("static mrb_value _pool_#{idx}[#{current_irep.pool.size}];\n")
+        outio.write("static mrb_sym _syms_#{idx}[#{current_irep.syms.size}];\n")
+      end
+    end
 
     @prepend_compiled_ireps.reverse.each do |str|
       outio.write(str)
@@ -30,6 +56,29 @@ class OpcodeParser
     end
 
     outio.write(method_prelude)
+    # set up pool and syms
+    if @irep_idx == 0
+      tabs = "    "
+      pool_size_sum = @parser.ireps.reduce(0) { |sum, irep| sum + irep.pool.size }
+      outio.write("  {\n")
+      outio.write("#{tabs}mrb_value _gc_pool_protect = mrb_ary_new_capa(mrb, #{pool_size_sum});\n")
+      outio.write("#{tabs}ai = mrb->arena_idx;\n")
+      @parser.ireps.each.with_index do |current_irep, idx|
+        current_irep.syms.each.with_index do |sym, sym_idx|
+          outio.write("#{tabs}_syms_#{idx}[#{sym_idx}] = mrb_intern2(mrb, \"#{sym}\", #{sym.length});\n")
+          #outio.write("  mrb_gc_arena_restore(mrb, ai);\n") # TODO: can remove this
+          # TODO: make syms by name eg. _sym_print, so code can be read.. only for symbols with simple name
+        end
+        current_irep.pool.each.with_index do |val, pool_idx|
+          val = value_from_pool_to_code(val)
+          outio.write("#{tabs}_pool_#{idx}[#{pool_idx}] = #{val};\n")
+          outio.write("#{tabs}mrb_ary_push(mrb, _gc_pool_protect, _pool_#{idx}[#{pool_idx}]);\n")
+          outio.write("#{tabs}mrb_gc_arena_restore(mrb, ai);\n")
+        end
+      end
+      outio.write("  }\n")
+    end
+
     instruction_bodies.each.with_index do |str, idx|
       outio.write("\n  // #{irep.iseqs[idx]}\n")
 
@@ -77,30 +126,15 @@ class OpcodeParser
 
       # symbols
       @instr_body.gsub!(/syms\[([^\]]+)\]/) do
-        "mrb_intern(mrb, \"#{irep.syms[$1.to_i]}\")"
+        "_syms_#{@irep_idx}[#{$1}]"
       end
       # string literals
-      @instr_body.gsub!(/mrb_str_literal\(mrb, (pool\[[^\]]+\])\)/) do
-        $1
-      end
+      #@instr_body.gsub!(/mrb_str_literal\(mrb, (pool\[[^\]]+\])\)/) do
+      #  $1
+      #end
       # pool
       @instr_body.gsub!(/pool\[([^\]]+)\]/) do
-        val = irep.pool[$1.to_i]
-        val = case val
-        when Float
-          "mrb_float_value(#{val})"
-        when Numeric
-          "mrb_fixnum_value(#{val})"
-        when String
-          # TODO fix this so we can load binary strings too
-          val.gsub!('"', '\\"');
-          "mrb_str_new_cstr(mrb, \"#{val}\")"
-        when Regexp
-          # TODO
-          raise
-        else
-          val
-        end
+        "_pool_#{@irep_idx}[#{$1}]"
       end
       # raise
       @instr_body.gsub!("goto L_RAISE;", "mrbb_raise(mrb);")
