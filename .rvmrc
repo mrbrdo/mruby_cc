@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-rvm 1.9.3@mruby_cc --fuzzy --create
