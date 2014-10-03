@@ -22,7 +22,7 @@ install		: all
 
 .PHONY		: mruby
 mruby		: mruby/.git
-	$(MAKE) -C mruby
+	CFLAGS="-fPIC" $(MAKE) -C mruby
 
 mruby/.git	:
 	$(GIT) submodule init

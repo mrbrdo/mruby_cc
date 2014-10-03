@@ -30,11 +30,11 @@ ifeq ($(strip $(COMPILE_MODE)),)
 endif
 
 ifeq ($(COMPILE_MODE),debug)
-	CFLAGS = -g -O3
+	CFLAGS = -g -O3 -fPIC
 else ifeq ($(COMPILE_MODE),release)
-	CFLAGS = -O3
+	CFLAGS = -O3 -fPIC
 else ifeq ($(COMPILE_MODE),small)
-	CFLAGS = -Os
+	CFLAGS = -Os -fPIC
 endif
 
 ALL_CFLAGS = -Wall -Werror-implicit-function-declaration $(CFLAGS)
