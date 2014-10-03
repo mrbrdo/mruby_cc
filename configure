@@ -2808,11 +2808,13 @@ test "$ruby_major_version" -lt 1 && { { $as_echo "$as_me:${as_lineno-$LINENO}: e
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "ruby version in \$PATH is $ruby_version; must be at least 1.9
 See \`config.log' for more details" "$LINENO" 5; }
-test "$ruby_minor_version" -lt 9 && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+if test "$ruby_major_version" -eq 1 ; then
+  test "$ruby_minor_version" -lt 9 && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "ruby version in \$PATH is $ruby_version; must be at least 1.9
+as_fn_error $? "ruby version in \$PATH is
+$ruby_version; must be at least 1.9
 See \`config.log' for more details" "$LINENO" 5; }
-
+fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ruby gem activesupport" >&5
 $as_echo_n "checking for ruby gem activesupport... " >&6; }
 echo 'gem = Gem::Specification.find_by_name("activesupport")' | $RUBY 2>/dev/null ; gem_activesupport=$?

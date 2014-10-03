@@ -21,8 +21,10 @@ changequote([,])
 test -z "$ruby_major_version" && AC_MSG_FAILURE([ruby in \$PATH does not work])
 test -z "$ruby_minor_version" && AC_MSG_FAILURE([ruby in \$PATH does not work])
 test "$ruby_major_version" -lt 1 && AC_MSG_FAILURE([ruby version in \$PATH is $ruby_version; must be at least 1.9])
-test "$ruby_minor_version" -lt 9 && AC_MSG_FAILURE([ruby version in \$PATH is $ruby_version; must be at least 1.9])
-
+if test "$ruby_major_version" -eq 1 ; then
+  test "$ruby_minor_version" -lt 9 && AC_MSG_FAILURE([ruby version in \$PATH is 
+$ruby_version; must be at least 1.9])
+fi
 dnl Ensure ruby gems: activesupport i18n.
 AC_MSG_CHECKING([for ruby gem activesupport])
 echo 'gem = Gem::Specification.find_by_name("activesupport")' | $RUBY 2>/dev/null ; gem_activesupport=$?
