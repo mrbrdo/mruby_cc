@@ -1,0 +1,39 @@
+SITE
+  remote: http://community.opscode.com/api/v1
+  specs:
+    apt (1.10.0)
+    build-essential (1.4.4)
+    chef_handler (1.1.6)
+    dmg (2.2.0)
+    git (4.0.2)
+      build-essential (>= 0.0.0)
+      dmg (>= 0.0.0)
+      runit (>= 1.0.0)
+      windows (>= 0.0.0)
+      yum (~> 3.0)
+      yum-epel (>= 0.0.0)
+    ruby_build (0.8.0)
+    runit (1.5.10)
+      build-essential (>= 0.0.0)
+      yum (~> 3.0)
+      yum-epel (>= 0.0.0)
+    windows (1.34.6)
+      chef_handler (>= 0.0.0)
+    yum (3.3.2)
+    yum-epel (0.5.1)
+      yum (~> 3.0)
+
+GIT
+  remote: https://github.com/fnichol/chef-rbenv
+  ref: master
+  sha: 0a3018634bafe58ad21c6ee271af015220e444b9
+  specs:
+    rbenv (0.7.3)
+
+DEPENDENCIES
+  apt (>= 0)
+  build-essential (>= 0)
+  git (>= 0)
+  rbenv (>= 0)
+  ruby_build (>= 0)
+

@@ -29,3 +29,6 @@ config.log
 config.status
 Makefile
 perf_test_results.txt
+/tmp
+/.vagrant
+/cookbooks
