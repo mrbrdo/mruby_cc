@@ -13,7 +13,7 @@ https://github.com/mrbrdo/mruby_cc/wiki/Install
 = Use
 
   echo "puts 'hello world'" > test.rb
-  ./mrbcc_compile test.rb
+  ./compile test.rb
 
   ./runner test.so
 

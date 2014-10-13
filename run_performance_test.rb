@@ -16,7 +16,7 @@ perf_mruby = if idx
 end
 
 puts "Compiling with mruby_cc..."
-%x[./mrbcc_compile test/performance_test.rb]
+%x[./compile test/performance_test.rb]
 puts "Running with mruby_cc..."
 output = %x[./runner test/performance_test.so]
 idx = output.index(durations_separator)
