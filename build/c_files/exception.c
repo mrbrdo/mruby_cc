@@ -5,19 +5,19 @@ ecall(mrb_state *mrb, int i)
 {
   struct RProc *p;
   mrb_callinfo *ci;
-  mrb_value *self = mrb->stack;
+  mrb_value *self = mrb->c->stack;
   struct RObject *exc;
 
-  p = mrb->ensure[i];
+  p = mrb->c->ensure[i];
   ci = cipush(mrb);
-  ci->stackidx = mrb->stack - mrb->stbase;
+  ci->stackent = mrb->c->stack;
   ci->mid = ci[-1].mid;
   ci->acc = -1;
   ci->argc = 0;
   ci->proc = p;
   ci->nregs = p->body.irep->nregs;
   ci->target_class = p->target_class;
-  mrb->stack = mrb->stack + ci[-1].nregs;
+  mrb->c->stack = mrb->c->stack + ci[-1].nregs;
   exc = mrb->exc; mrb->exc = 0;
   mrb_run(mrb, p, *self);
   if (!mrb->exc) mrb->exc = exc;
@@ -27,22 +27,22 @@ static void
 mrbb_ecall(mrb_state *mrb, struct RProc *p)
 {
   mrb_callinfo *ci;
-  mrb_value *self = mrb->stack;
+  mrb_value *self = mrb->c->stack;
   struct RObject *exc;
   int ai = mrb->arena_idx;
 
   ci = cipush(mrb);
-  ci->stackidx = mrb->stack - mrb->stbase;
+  ci->stackent = mrb->c->stack;
   ci->mid = ci[-1].mid;
   ci->acc = -1;
   ci->argc = 0;
   ci->proc = p;
   ci->target_class = p->target_class;
-  mrb->stack = mrb->stack + ci[-1].nregs;
+  mrb->c->stack = mrb->c->stack + ci[-1].nregs;
   exc = mrb->exc; mrb->exc = 0;
   p->body.func(mrb, *self);
   mrb->arena_idx = ai;
-  mrb->stack = mrb->stbase + mrb->ci->stackidx;
+  mrb->c->stack = mrb->c->ci->stackent;
   cipop(mrb);
   if (!mrb->exc) mrb->exc = exc;
 }
@@ -59,24 +59,24 @@ void mrbb_stop(mrb_state *mrb) {
   on Linux, but not on OSX.
 */
 
-void mrbb_rescue_push(mrb_state *mrb, jmp_buf *c_jmp) {
-  jmp_buf *c_jmp_copy = (jmp_buf *)malloc(sizeof(jmp_buf));
-  if (mrb->rsize <= mrb->ci->ridx) {
-    if (mrb->rsize == 0) mrb->rsize = 16;
-    else mrb->rsize *= 2;
-    mrb->rescue = (mrb_code **)mrb_realloc(mrb, mrb->rescue, sizeof(mrb_code*) * mrb->rsize);
+void mrbb_rescue_push(mrb_state *mrb, struct mrb_jmpbuf *c_jmp) {
+  struct mrb_jmpbuf *c_jmp_copy = (struct mrb_jmpbuf *)malloc(sizeof(struct mrb_jmpbuf));
+  if (mrb->c->rsize <= mrb->c->ci->ridx) {
+    if (mrb->c->rsize == 0) mrb->c->rsize = 16;
+    else mrb->c->rsize *= 2;
+    mrb->c->rescue = (mrb_code **)mrb_realloc(mrb, mrb->c->rescue, sizeof(mrb_code*) * mrb->c->rsize);
   }
-  memmove(c_jmp_copy, c_jmp, sizeof(jmp_buf));
-  ((jmp_buf **) mrb->rescue)[mrb->ci->ridx++] = c_jmp_copy;
+  memmove(c_jmp_copy, c_jmp, sizeof(struct mrb_jmpbuf));
+  ((struct mrb_jmpbuf **) mrb->c->rescue)[mrb->c->ci->ridx++] = c_jmp_copy;
 }
 
 /*
-  Must free memory allocated for the jmp_buf.
+  Must free memory allocated for the mrb_jmpbuf.
 */
 
 void mrbb_rescue_pop(mrb_state *mrb) {
-  jmp_buf *c_jmp = ((jmp_buf **) mrb->rescue)[mrb->ci->ridx-1];
-  mrb->ci->ridx--;
+  struct mrb_jmpbuf *c_jmp = ((struct mrb_jmpbuf **) mrb->c->rescue)[mrb->c->ci->ridx-1];
+  mrb->c->ci->ridx--;
   free(c_jmp);
 }
 
@@ -84,37 +84,54 @@ void mrbb_raise(mrb_state *mrb) {
   // stolen from OP_RETURN
   mrb_callinfo *ci;
   int eidx;
-  ci = mrb->ci;
-  eidx = mrb->ci->eidx;
+  ci = mrb->c->ci;
+  eidx = ci->eidx;
 
-  if (ci == mrb->cibase) mrbb_stop(mrb);
+  if (ci == mrb->c->cibase) {
+    mrbb_stop(mrb);
+  }
+  while (eidx > ci[-1].eidx) {
+    ecall(mrb, --eidx);
+  }
   while (ci[0].ridx == ci[-1].ridx) {
     cipop(mrb);
-    ci = mrb->ci;
-    /*if (ci[1].acc < 0 && prev_jmp) {
-      mrb->jmp = prev_jmp;
-      longjmp(*(jmp_buf*)mrb->jmp, 1);
-    }*/
-    if (ci[1].acc < 0 && mrb->jmp) {
-      longjmp(*(jmp_buf*)mrb->jmp, 1);
+    ci = mrb->c->ci;
+    mrb->c->stack = ci[1].stackent;
+    // TODO: we used mrb->jmp instead of prev_jmp
+    if (ci[1].acc == CI_ACC_SKIP && mrb->jmp) {
+      MRB_THROW(mrb->jmp);
     }
-    while (eidx > mrb->ci->eidx) {
-      ecall(mrb, --eidx);
+    if (ci > mrb->c->cibase) {
+      while (eidx > ci[-1].eidx) {
+        ecall(mrb, --eidx);
+      }
     }
-    if (ci == mrb->cibase) {
+    else if (ci == mrb->c->cibase) {
       if (ci->ridx == 0) {
-        // TODO regs =
-        mrb->stack = mrb->stbase;
-        mrbb_stop(mrb);
+        if (mrb->c == mrb->root_c) {
+          // TODO regs =
+          mrb->c->stack = mrb->c->stbase;
+          mrbb_stop(mrb);
+        }
+        else {
+          struct mrb_context *c = mrb->c;
+
+          mrb->c = c->prev;
+          c->prev = NULL;
+          mrbb_raise(mrb);
+        }
       }
       break;
     }
   }
 
-  longjmp(*(jmp_buf*)mrb->jmp, 1);
+  // TODO does this even work? ridx 0 is probably entry point
+  if (ci->ridx == 0) mrbb_stop(mrb);
+
+  MRB_THROW(mrb->jmp);
  /* irep = ci->proc->body.irep;
   pool = irep->pool;
   syms = irep->syms;
-  regs = mrb->stack = mrb->stbase + ci[1].stackidx;
-  pc = mrb->rescue[--ci->ridx];*/
+  regs = mrb->c->stack = ci[1].stackent;
+  pc = mrb->c->rescue[--ci->ridx];*/
 }

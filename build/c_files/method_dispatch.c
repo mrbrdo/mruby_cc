@@ -1,14 +1,14 @@
 void
 mrbb_send_setup_stack_extend(mrb_state *mrb, mrb_value self, mrb_value *argv, int argc)
 {
-  mrb->stack = mrb->stack + mrb->ci[-1].nregs;
+  mrb->c->stack = mrb->c->stack + mrb->c->ci[-1].nregs;
 
   stack_extend(mrb, argc + 2, 0);
-  mrb->stack[0] = self;
+  mrb->c->stack[0] = self;
   if (argc > 0) {
-    stack_copy(mrb->stack+1, argv, argc);
+    stack_copy(mrb->c->stack+1, argv, argc);
   }
-  mrb->stack[argc+1] = argv[argc];
+  mrb->c->stack[argc+1] = argv[argc];
 }
 
 mrb_value
@@ -34,15 +34,14 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
   if (!m) {
     mrb_value sym = mrb_symbol_value(mid);
 
-    mid = mrb_intern(mrb, "method_missing");
+    mid = mrb_intern_lit(mrb, "method_missing");
     m = mrb_method_search_vm(mrb, &c, mid);
     if (n == CALL_MAXARGS) {
       mrb_ary_unshift(mrb, regs[a+1], sym);
     }
     else {
-      memmove(regs+a+2, regs+a+1, sizeof(mrb_value)*(n+1));
+      value_move(regs+a+2, regs+a+1, ++n);
       regs[a+1] = sym;
-      n++;
     }
   }
 
@@ -50,46 +49,51 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
   ci = cipush(mrb);
   ci->mid = mid;
   ci->proc = m;
-  ci->stackidx = mrb->stack - mrb->stbase;
-  ci->argc = n;
-  if (ci->argc == CALL_MAXARGS) ci->argc = -1;
-  ci->target_class = c; // TODO look this and met_start.c
+  ci->stackent = mrb->c->stack;
+  if (c->tt == MRB_TT_ICLASS) {
+    ci->target_class = c->c;
+  }
+  else {
+    ci->target_class = c;
+  }
   ci->acc = -1; // TODO ?
 
   /* prepare stack */
-  mrb->stack += a;
+  mrb->c->stack += a;
 
   if (MRB_PROC_CFUNC_P(m)) {
     if (n == CALL_MAXARGS) { // TODO this is not necessary for MRBCC func?
+      ci->argc = -1;
       ci->nregs = 3;
     }
     else {
+      ci->argc = n;
       ci->nregs = n + 2;
     }
 
     int ai = mrb->arena_idx;
-    int stackidx = mrb->ci->stackidx;
-    int cioff = mrb->ci - mrb->cibase;
+    mrb_value *stackent = mrb->c->ci->stackent;
+    uintptr_t cioff = mrb->c->ci - mrb->c->cibase;
     val = m->body.func(mrb, recv);
     mrb->arena_idx = ai;
     mrb_gc_protect(mrb, val); // not needed really? safeguard just in case?
-    if ((mrb->ci - mrb->cibase) == cioff) {
-      mrb->stack = mrb->stbase + stackidx;
+    if ((mrb->c->ci - mrb->c->cibase) == cioff) {
+      mrb->c->stack = stackent;
       cipop(mrb);
     } else { // break
-      mrb->stack = mrb->stbase + stackidx; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
+      mrb->c->stack = stackent; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
       // We NEED to cipop the first time, but not after that
-      if (mrb->ci->proc != (struct RProc *) -1) {
+      if (mrb->c->ci->proc != (struct RProc *) -1) {
         cipop(mrb);
         cipush(mrb);
       }
-      mrb->ci->proc = (struct RProc *)-1;
+      mrb->c->ci->proc = (struct RProc *)-1;
     }
     // TODO: if (MRB_PROC_MRBCFUNC_P(m))
     /*} else { // this improves speed by some small factor
         val = m->body.func(mrb, recv);
         // pop stackpos
-        mrb->stack = mrb->stbase + mrb->ci->stackidx;
+        mrb->c->stack = mrb->c->ci->stackent;
         cipop(mrb);
     }*/
     if (mrb->exc) mrbb_raise(mrb); // we can do this before cipop... see OP_SEND
@@ -97,20 +101,22 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
   else {
     mrb_irep *irep = m->body.irep;
     ci->nregs = irep->nregs;
-    if (ci->argc < 0) {
+    if (n == CALL_MAXARGS) {
+      ci->argc = -1;
       stack_extend(mrb, (irep->nregs < 3) ? 3 : irep->nregs, 3);
     }
     else {
-      stack_extend(mrb, irep->nregs,  ci->argc+2);
+      ci->argc = n;
+      stack_extend(mrb, irep->nregs,  n+2);
     }
     val = mrb_run(mrb, m, recv);
   }
-  *regs_ptr = mrb->stack; // stack_extend might realloc stack
+  *regs_ptr = mrb->c->stack; // stack_extend might realloc stack
   return val;
 }
 
 void
 mrbb_send(mrb_state *mrb, mrb_sym mid, int argc, mrb_value **regs_ptr, int a, int sendb)
 {
-  mrb->stack[a] = mrbb_send_r(mrb, mid, argc, regs_ptr, a, sendb);
+  mrb->c->stack[a] = mrbb_send_r(mrb, mid, argc, regs_ptr, a, sendb);
 }

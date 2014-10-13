@@ -7,13 +7,30 @@ class OpcodeParser
   attr_reader :name, :irep, :opcodes
   DEBUG_MODE = false
   DEBUG_MODE_VERBOSE = DEBUG_MODE && false
-  def initialize(parser, opcodes, name, irep_idx)
+  def initialize(parser, opcodes, name, irep = nil, rep_names = nil)
     @name = name || "met_#{SecureRandom.hex}"
-    @irep = parser.ireps[irep_idx]
+    @irep = irep || parser.irep
     @parser = parser
-    @irep_idx = irep_idx
     @opcodes = opcodes
     @prepend_compiled_ireps = []
+    if irep
+      @entry_point = false
+      @rep_names = rep_names
+    else
+      @entry_point = true
+      @rep_names = {}
+      name_reps(@irep, @rep_names)
+    end
+    @rep_name = @rep_names[@irep]
+  end
+
+  def name_reps(rep, reps, start = 1)
+    reps[rep] = start.to_s
+    start += 1
+    rep.reps.each do |child_rep|
+      start = name_reps(child_rep, reps, start)
+    end
+    start
   end
 
   def label(i)
@@ -21,20 +38,20 @@ class OpcodeParser
     "L_#{@name.upcase}_#{i}"
   end
 
+  def c_str_escape(str)
+    str.gsub(/[^\w\d ]/m) do |c|
+      "\\#{c.ord.to_s(8).rjust(3, '0')}"
+    end
+  end
+
   def value_from_pool_to_code(val)
     case val
     when Float
-      "mrb_float_value(#{val})"
+      "mrb_float_value(mrb, #{val})"
     when Numeric
       "mrb_fixnum_value(#{val})"
     when String
-      # TODO fix this so we can load binary strings too
-      val.gsub!('"', '\\"')
-
-      real_str = val.gsub(/(?<!\\)#/, "\\#")
-      real_str = eval("\"#{real_str}\"")
-
-      "mrb_str_new(mrb, \"#{val}\", #{real_str.length})"
+      "mrb_str_new(mrb, \"#{c_str_escape(val)}\", #{val.size})"
     when Regexp
       # TODO
       raise
@@ -47,10 +64,10 @@ class OpcodeParser
     outio = StringIO.new
 
     # pool and syms
-    if @irep_idx == 0
-      @parser.ireps.each.with_index do |current_irep, idx|
-        outio.write("static mrb_value _pool_#{idx}[#{current_irep.pool.size}];\n")
-        outio.write("static mrb_sym _syms_#{idx}[#{current_irep.syms.size}];\n")
+    if @entry_point
+      @rep_names.each_pair do |current_irep, name|
+        outio.write("static mrb_value _pool_#{name}[#{current_irep.pool.size}];\n")
+        outio.write("static mrb_sym _syms_#{name}[#{current_irep.syms.size}];\n")
       end
     end
 
@@ -61,22 +78,22 @@ class OpcodeParser
 
     outio.write(method_prelude)
     # set up pool and syms
-    if @irep_idx == 0
+    if @entry_point
       tabs = "    "
-      pool_size_sum = @parser.ireps.reduce(0) { |sum, irep| sum + irep.pool.size }
+      pool_size_sum = @rep_names.keys.reduce(0) { |sum, irep| sum + irep.pool.size }
       outio.write("  {\n")
       outio.write("#{tabs}mrb_value _gc_pool_protect = mrb_ary_new_capa(mrb, #{pool_size_sum});\n")
       outio.write("#{tabs}ai = mrb->arena_idx;\n")
-      @parser.ireps.each.with_index do |current_irep, idx|
+      @rep_names.each_pair do |current_irep, rep_name|
         current_irep.syms.each.with_index do |sym, sym_idx|
-          outio.write("#{tabs}_syms_#{idx}[#{sym_idx}] = mrb_intern2(mrb, \"#{sym}\", #{sym.length});\n")
+          outio.write("#{tabs}_syms_#{rep_name}[#{sym_idx}] = mrb_intern(mrb, \"#{c_str_escape(sym)}\", #{sym.length});\n")
           #outio.write("  mrb_gc_arena_restore(mrb, ai);\n") # TODO: can remove this
           # TODO: make syms by name eg. _sym_print, so code can be read.. only for symbols with simple name
         end
         current_irep.pool.each.with_index do |val, pool_idx|
           val = value_from_pool_to_code(val)
-          outio.write("#{tabs}_pool_#{idx}[#{pool_idx}] = #{val};\n")
-          outio.write("#{tabs}mrb_ary_push(mrb, _gc_pool_protect, _pool_#{idx}[#{pool_idx}]);\n")
+          outio.write("#{tabs}_pool_#{rep_name}[#{pool_idx}] = #{val};\n")
+          outio.write("#{tabs}mrb_ary_push(mrb, _gc_pool_protect, _pool_#{rep_name}[#{pool_idx}]);\n")
           outio.write("#{tabs}mrb_gc_arena_restore(mrb, ai);\n")
         end
       end
@@ -93,10 +110,10 @@ class OpcodeParser
       outio.write("\n  ");
 
       if OpcodeParser::DEBUG_MODE
-        outio.write("  printf(\"#{label(idx)}\\n\"); fflush(stdout);\n")
+        outio.write("  printf(\"#{c_str_escape(label(idx))}\\n\"); fflush(stdout);\n")
         str2 = <<-EOF
-        printf("X#{label(idx).strip}\\nXstack ptr \%d\\n", mrb->stack - mrb->stbase);
-        printf("Xregs ptr \%d\\n", regs - mrb->stack);
+        printf("X#{label(idx).strip}\\nXstack ptr \%d\\n", mrb->c->stack - mrb->c->stbase);
+        printf("Xregs ptr \%d\\n", regs - mrb->c->stack);
         EOF
         #outio.write(str2)
       end
@@ -130,7 +147,7 @@ class OpcodeParser
 
       # symbols
       @instr_body.gsub!(/syms\[([^\]]+)\]/) do
-        "_syms_#{@irep_idx}[#{$1}]"
+        "_syms_#{@rep_name}[#{$1}]"
       end
       # string literals
       #@instr_body.gsub!(/mrb_str_literal\(mrb, (pool\[[^\]]+\])\)/) do
@@ -138,7 +155,7 @@ class OpcodeParser
       #end
       # pool
       @instr_body.gsub!(/pool\[([^\]]+)\]/) do
-        "_pool_#{@irep_idx}[#{$1}]"
+        "_pool_#{@rep_name}[#{$1}]"
       end
       # raise
       @instr_body.gsub!("goto L_RAISE;", "mrbb_raise(mrb);")
@@ -151,11 +168,11 @@ class OpcodeParser
 
   def method_epilogue
     body = "\n"
-    if @irep_idx == 0
+    if @entry_point
       # TODO look at OP_STOP?
       body += "  return mrb_nil_value();\n"
     else
-      body += "  printf(\"ERROR: Method #{@name} did not return.\\n\");\n"
+      body += "  printf(\"ERROR: Method #{c_str_escape(@name)} did not return.\\n\");\n"
       body += "  exit(1);\n" # so we don't get warnings about no return
     end
     body += "}\n"
@@ -180,9 +197,10 @@ class OpcodeParser
   end
 
   def fix_lsend_2arg(met_name)
-    @instr_body.gsub!("goto L_SEND;",
+    @instr_body.gsub!("goto L_SEND;") do
       "regs[a] = mrb_funcall_with_block(mrb, regs[a], " +
-      "mrb_intern(mrb, \"#{met_name}\"), 1, &regs[a+1], mrb_nil_value());")
+      "mrb_intern_cstr(mrb, \"#{c_str_escape(met_name)}\"), 1, &regs[a+1], mrb_nil_value());"
+    end
   end
 
   def lambda_arg_precompiled(parser, arg_name)
@@ -204,7 +222,7 @@ class OpcodeParser
       met_name = nil
     end
 
-    parser = OpcodeParser.new(@parser, opcodes, met_name, @irep_idx + @instr.send(arg_name))
+    parser = OpcodeParser.new(@parser, opcodes, met_name, irep.reps[@instr.send(arg_name)], @rep_names)
     @prepend_compiled_ireps.push(parser.process_irep)
     lambda_arg_precompiled(parser, arg_name)
     parser
@@ -309,5 +327,22 @@ class OpcodeParser
 
   def op_jmpnot
     op_jmpif
+  end
+
+  def op_getcv
+    clear_debug_err_pc
+  end
+
+  def op_getmcnst
+    clear_debug_err_pc
+  end
+
+  def op_getconst
+    clear_debug_err_pc
+  end
+
+  def clear_debug_err_pc
+    @instr_body.gsub!("ERR_PC_SET(mrb, pc);", "")
+    @instr_body.gsub!("ERR_PC_CLR(mrb);", "")
   end
 end

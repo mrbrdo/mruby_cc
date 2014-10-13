@@ -28,6 +28,7 @@
 
 // compiled code
 #include "c_files/out.c"
+#include <dlfcn.h>
 
 extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   mrb_callinfo *ci;
@@ -91,3 +92,27 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
 
   return result;
 }
+
+int
+main(int argc, char **argv)
+{
+  mrb_state *mrb = mrb_open();
+
+  if (mrb == NULL) {
+    fprintf(stderr, "Invalid mrb_state, exiting driver");
+    return EXIT_FAILURE;
+  }
+
+  mrb_iv_set(mrb, mrb_obj_value(mrb->kernel_module),
+    mrb_intern_cstr(mrb, "@loaded_compiled_mrb_handles"),
+      mrb_ary_new(mrb));
+
+  mrbb_exec_entry_point(mrb, mrb_top_self(mrb));
+
+  mrb_close(mrb);
+
+  // TODO: unload .so
+  //dlclose(handle); // gotta keep a global array of loaded sos and not close
+  return EXIT_SUCCESS;
+}
+

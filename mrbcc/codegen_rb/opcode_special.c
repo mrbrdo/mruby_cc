@@ -15,7 +15,7 @@
     CASE(OP_SUPER) {
       /* A B C  R(A) := super(R(A+1),... ,R(A+C-1)) */
       mrb_value recv;
-      mrb_callinfo *ci = mrb->ci;
+      mrb_callinfo *ci = mrb->c->ci;
       struct RProc *m;
       struct RClass *c;
       mrb_sym mid = ci->mid;
@@ -23,10 +23,10 @@
       int n = GETARG_C(i);
 
       recv = regs[0];
-      c = mrb->ci->target_class->super;
+      c = mrb->c->ci->target_class->super;
       m = mrb_method_search_vm(mrb, &c, mid);
       if (!m) {
-        mid = mrb_intern(mrb, "method_missing");
+        mid = mrb_intern_cstr(mrb, "method_missing");
         m = mrb_method_search_vm(mrb, &c, mid);
         if (n == CALL_MAXARGS) {
           mrb_ary_unshift(mrb, regs[a+1], mrb_symbol_value(ci->mid));
@@ -42,22 +42,22 @@
       ci = cipush(mrb);
       ci->mid = mid;
       ci->proc = m;
-      ci->stackidx = mrb->stack - mrb->stbase;
+      ci->stackent = mrb->c->stack;
       ci->argc = n;
       if (ci->argc == CALL_MAXARGS) ci->argc = -1;
       ci->target_class = m->target_class;
       //ci->pc = pc + 1;
 
       /* prepare stack */
-      mrb->stack += a;
-      mrb->stack[0] = recv;
+      mrb->c->stack += a;
+      mrb->c->stack[0] = recv;
 
       if (MRB_PROC_CFUNC_P(m)) {
-        mrb->stack[0] = m->body.func(mrb, recv);
+        mrb->c->stack[0] = m->body.func(mrb, recv);
         mrb->arena_idx = ai;
         if (mrb->exc) goto L_RAISE;
         /* pop stackpos */
-        regs = mrb->stack = mrb->stbase + mrb->ci->stackidx;
+        regs = mrb->c->stack = mrb->c->ci->stackent;
         cipop(mrb);
         NEXT;
       }

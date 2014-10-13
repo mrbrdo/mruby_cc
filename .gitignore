@@ -21,8 +21,9 @@ test.rb
 tmp_out.rb
 tmp_out.mrb
 build/c_files/out.c
+build/*.o-*
 testsuite
-build/mrbcc_out
+build-standalone/mrbcc_out
 *.so
 runner
 config.log

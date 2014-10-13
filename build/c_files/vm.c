@@ -1,149 +1,141 @@
 /* Things from vm.c that I need */
 /* Only things without modification from vm.c (identical) */
-#define SET_TRUE_VALUE(r) MRB_SET_VALUE(r, MRB_TT_TRUE, value.i, 1)
-#define SET_FALSE_VALUE(r) MRB_SET_VALUE(r, MRB_TT_FALSE, value.i, 1)
-#define SET_NIL_VALUE(r) MRB_SET_VALUE(r, MRB_TT_FALSE, value.i, 0)
-#define SET_INT_VALUE(r,n) MRB_SET_VALUE(r, MRB_TT_FIXNUM, value.i, (n))
-#define SET_SYM_VALUE(r,v) MRB_SET_VALUE(r, MRB_TT_SYMBOL, value.sym, (v))
-#define SET_OBJ_VALUE(r,v) MRB_SET_VALUE(r, (((struct RObject*)(v))->tt), value.p, (v))
-#ifdef MRB_NAN_BOXING
-#define SET_FLT_VALUE(r,v) r.f = (v)
-#else
-#define SET_FLT_VALUE(r,v) MRB_SET_VALUE(r, MRB_TT_FLOAT, value.f, (v))
-#endif
-
 #define CALL_MAXARGS 127
 
-#define attr_i value.i
-#ifdef MRB_NAN_BOXING
-#define attr_f f
-#else
-#define attr_f value.f
-#endif
+#define ARENA_RESTORE(mrb,ai) (mrb)->arena_idx = (ai)
 
-#define TYPES2(a,b) (((((int)(a))<<8)|((int)(b)))&0xffff)
+#define TYPES2(a,b) ((((uint16_t)(a))<<8)|(((uint16_t)(b))&0xff))
 #define OP_MATH_BODY(op,v1,v2) do {\
-  regs[a].v1 = regs[a].v1 op regs[a+1].v2;\
+  v1(regs[a]) = v1(regs[a]) op v2(regs[a+1]);\
 } while(0)
 
-#define OP_CMP_BODY(op,v1,v2) do {\
-  if (regs[a].v1 op regs[a+1].v2) {\
-    SET_TRUE_VALUE(regs[a]);\
-  }\
-  else {\
-    SET_FALSE_VALUE(regs[a]);\
-  }\
-} while(0)
+#define OP_CMP_BODY(op,v1,v2) (v1(regs[a]) op v2(regs[a+1]))
 
 #define STACK_INIT_SIZE 128
 #define CALLINFO_INIT_SIZE 32
 
+#define CI_ACC_SKIP    -1
+#define CI_ACC_DIRECT  -2
+
 static inline void
 stack_copy(mrb_value *dst, const mrb_value *src, size_t size)
 {
-  int i;
-
-  for (i = 0; i < size; i++) {
-    dst[i] = src[i];
+  while (size-- > 0) {
+    *dst++ = *src++;
   }
 }
 
 static void
 stack_init(mrb_state *mrb)
 {
-  /* assert(mrb->stack == NULL); */
-  mrb->stbase = (mrb_value *)mrb_calloc(mrb, STACK_INIT_SIZE, sizeof(mrb_value));
-  mrb->stend = mrb->stbase + STACK_INIT_SIZE;
-  mrb->stack = mrb->stbase;
+  struct mrb_context *c = mrb->c;
 
-  /* assert(mrb->ci == NULL); */
-  mrb->cibase = (mrb_callinfo *)mrb_calloc(mrb, CALLINFO_INIT_SIZE, sizeof(mrb_callinfo));
-  mrb->ciend = mrb->cibase + CALLINFO_INIT_SIZE;
-  mrb->ci = mrb->cibase;
-  mrb->ci->target_class = mrb->object_class;
+  /* mrb_assert(mrb->stack == NULL); */
+  c->stbase = (mrb_value *)mrb_calloc(mrb, STACK_INIT_SIZE, sizeof(mrb_value));
+  c->stend = c->stbase + STACK_INIT_SIZE;
+  c->stack = c->stbase;
+
+  /* mrb_assert(ci == NULL); */
+  c->cibase = (mrb_callinfo *)mrb_calloc(mrb, CALLINFO_INIT_SIZE, sizeof(mrb_callinfo));
+  c->ciend = c->cibase + CALLINFO_INIT_SIZE;
+  c->ci = c->cibase;
+  c->ci->target_class = mrb->object_class;
+  c->ci->stackent = c->stack;
 }
 
 static void
-argnum_error(mrb_state *mrb, int num)
+argnum_error(mrb_state *mrb, mrb_int num)
 {
-  char buf[256];
-  int len;
   mrb_value exc;
+  mrb_value str;
 
-  if (mrb->ci->mid) {
-    len = snprintf(buf, sizeof(buf), "'%s': wrong number of arguments (%d for %d)",
-       mrb_sym2name(mrb, mrb->ci->mid),
-       mrb->ci->argc, num);
+  if (mrb->c->ci->mid) {
+    str = mrb_format(mrb, "'%S': wrong number of arguments (%S for %S)",
+                  mrb_sym2str(mrb, mrb->c->ci->mid),
+                  mrb_fixnum_value(mrb->c->ci->argc), mrb_fixnum_value(num));
   }
   else {
-    len = snprintf(buf, sizeof(buf), "wrong number of arguments (%d for %d)",
-       mrb->ci->argc, num);
+    str = mrb_format(mrb, "wrong number of arguments (%S for %S)",
+                  mrb_fixnum_value(mrb->c->ci->argc), mrb_fixnum_value(num));
   }
-  exc = mrb_exc_new(mrb, E_ARGUMENT_ERROR, buf, len);
-  mrb->exc = (struct RObject*)mrb_object(exc);
+  exc = mrb_exc_new_str(mrb, E_ARGUMENT_ERROR, str);
+  mrb->exc = mrb_obj_ptr(exc);
 }
 
-static inline int
+static inline mrb_bool
 is_strict(mrb_state *mrb, struct REnv *e)
 {
   int cioff = e->cioff;
 
-  if (cioff >= 0 && mrb->cibase[cioff].proc &&
-      MRB_PROC_STRICT_P(mrb->cibase[cioff].proc)) {
-    return 1;
+  if (MRB_ENV_STACK_SHARED_P(e) && mrb->c->cibase[cioff].proc &&
+      MRB_PROC_STRICT_P(mrb->c->cibase[cioff].proc)) {
+    return TRUE;
   }
-  return 0;
+  return FALSE;
 }
 
 static mrb_callinfo*
 cipush(mrb_state *mrb)
 {
-  int eidx = mrb->ci->eidx;
-  int ridx = mrb->ci->ridx;
+  struct mrb_context *c = mrb->c;
+  mrb_callinfo *ci = c->ci;
 
-  if (mrb->ci + 1 == mrb->ciend) {
-    size_t size = mrb->ci - mrb->cibase;
+  int eidx = ci->eidx;
+  int ridx = ci->ridx;
 
-    mrb->cibase = (mrb_callinfo *)mrb_realloc(mrb, mrb->cibase, sizeof(mrb_callinfo)*size*2);
-    mrb->ci = mrb->cibase + size;
-    mrb->ciend = mrb->cibase + size * 2;
+  if (ci + 1 == c->ciend) {
+    size_t size = ci - c->cibase;
+
+    c->cibase = (mrb_callinfo *)mrb_realloc(mrb, c->cibase, sizeof(mrb_callinfo)*size*2);
+    c->ci = c->cibase + size;
+    c->ciend = c->cibase + size * 2;
   }
-  mrb->ci++;
-  mrb->ci->nregs = 2;
-  mrb->ci->eidx = eidx;
-  mrb->ci->ridx = ridx;
-  mrb->ci->env = 0;
-  return mrb->ci;
+  ci = ++c->ci;
+  ci->eidx = eidx;
+  ci->ridx = ridx;
+  ci->env = 0;
+  ci->pc = 0;
+  ci->err = 0;
+  ci->proc = 0;
+
+  return ci;
 }
 
 static void
 cipop(mrb_state *mrb)
 {
-  if (mrb->ci->env) {
-    struct REnv *e = mrb->ci->env;
-    int len = (int)e->flags;
+  struct mrb_context *c = mrb->c;
+
+  if (c->ci->env) {
+    struct REnv *e = c->ci->env;
+    size_t len = (size_t)MRB_ENV_STACK_LEN(e);
     mrb_value *p = (mrb_value *)mrb_malloc(mrb, sizeof(mrb_value)*len);
 
-    e->cioff = -1;
-    stack_copy(p, e->stack, len);
+    MRB_ENV_UNSHARE_STACK(e);
+    if (len > 0) {
+      stack_copy(p, e->stack, len);
+    }
     e->stack = p;
+    mrb_write_barrier(mrb, (struct RBasic *)e);
   }
 
-  mrb->ci--;
+  c->ci--;
 }
 
 static void
 envadjust(mrb_state *mrb, mrb_value *oldbase, mrb_value *newbase)
 {
-  mrb_callinfo *ci = mrb->cibase;
+  mrb_callinfo *ci = mrb->c->cibase;
 
-  while (ci <= mrb->ci) {
+  if (newbase == oldbase) return;
+  while (ci <= mrb->c->ci) {
     struct REnv *e = ci->env;
-    if (e && e->cioff >= 0) {
-      int off = e->stack - oldbase;
+    if (e && MRB_ENV_STACK_SHARED_P(e)) {
+      ptrdiff_t off = e->stack - oldbase;
 
       e->stack = newbase + off;
     }
+    ci->stackent = newbase + (ci->stackent - oldbase);
     ci++;
   }
 }
@@ -164,27 +156,59 @@ localjump_error(mrb_state *mrb, localjump_error_kind kind)
   mrb_value exc;
 
   msg = mrb_str_buf_new(mrb, sizeof(lead) + 7);
-  mrb_str_buf_cat(mrb, msg, lead, sizeof(lead) - 1);
-  mrb_str_buf_cat(mrb, msg, kind_str[kind], kind_str_len[kind]);
-  exc = mrb_exc_new3(mrb, E_LOCALJUMP_ERROR, msg);
-  mrb->exc = (struct RObject*)mrb_object(exc);
+  mrb_str_cat(mrb, msg, lead, sizeof(lead) - 1);
+  mrb_str_cat(mrb, msg, kind_str[kind], kind_str_len[kind]);
+  exc = mrb_exc_new_str(mrb, E_LOCALJUMP_ERROR, msg);
+  mrb->exc = mrb_obj_ptr(exc);
 }
 
-static mrb_value
-uvget(mrb_state *mrb, int up, int idx)
+static struct REnv*
+uvenv(mrb_state *mrb, int up)
 {
-  struct REnv *e = uvenv(mrb, up);
+  struct REnv *e = mrb->c->ci->proc->env;
 
-  if (!e) return mrb_nil_value();
-  return e->stack[idx];
+  while (up--) {
+    if (!e) return NULL;
+    e = (struct REnv*)e->c;
+  }
+  return e;
+}
+
+static struct REnv*
+top_env(mrb_state *mrb, struct RProc *proc)
+{
+  struct REnv *e = proc->env;
+
+  if (is_strict(mrb, e)) return e;
+  while (e->c) {
+    e = (struct REnv*)e->c;
+    if (is_strict(mrb, e)) return e;
+  }
+  return e;
+}
+
+static inline void
+stack_clear(mrb_value *from, size_t count)
+{
+#ifndef MRB_NAN_BOXING
+  const mrb_value mrb_value_zero = { { 0 } };
+
+  while (count-- > 0) {
+    *from++ = mrb_value_zero;
+  }
+#else
+  while (count-- > 0) {
+    SET_NIL_VALUE(*from);
+    from++;
+  }
+#endif
 }
 
 static void
-uvset(mrb_state *mrb, int up, int idx, mrb_value v)
+init_new_stack_space(mrb_state *mrb, int room, int keep)
 {
-  struct REnv *e = uvenv(mrb, up);
-
-  if (!e) return;
-  e->stack[idx] = v;
-  mrb_write_barrier(mrb, (struct RBasic*)e);
+  if (room > keep) {
+    /* do not leave uninitialized malloc region */
+    stack_clear(&(mrb->c->stack[keep]), room - keep);
+  }
 }

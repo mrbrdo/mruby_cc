@@ -1,25 +1,26 @@
     CASE(OP_ONERR) {
       /* sBx    pc+=sBx on exception */
-      jmp_buf c_jmp;
-      int stoff = mrb->stack - mrb->stbase;
-      int cioff = mrb->ci - mrb->cibase;
+      struct mrb_jmpbuf buf;
+      int stoff = mrb->c->stack - mrb->c->stbase;
+      int cioff = mrb->c->ci - mrb->c->cibase;
 
-      if (setjmp(c_jmp) == 0) {
-        mrb->jmp = &c_jmp;
-        mrbb_rescue_push(mrb, &c_jmp);
+      MRB_TRY(&buf) {
+        mrb->jmp = &buf;
+        mrbb_rescue_push(mrb, &buf);
       }
-      else {
+      MRB_CATCH(&buf) {
         // if rescued from method that was called from this method
         // and didn't have its own rescue
         // fix global state, be careful if stbase or cibase changed
-        mrb->ci = mrb->cibase + cioff;
-        regs = mrb->stack = mrb->stbase + stoff;
+        mrb->c->ci = mrb->c->cibase + cioff;
+        regs = mrb->c->stack = mrb->c->stbase + stoff;
 
         // go to rescue
         mrbb_rescue_pop(mrb);
-        mrb->jmp = (jmp_buf *)mrb->rescue[mrb->ci->ridx-1];
+        mrb->jmp = (struct mrb_jmpbuf *)mrb->c->rescue[mrb->c->ci->ridx-1];
         goto rescue_label(GETARG_sBx(i));
       }
+      MRB_END_EXC(&buf);
 
       NEXT;
     }
@@ -38,28 +39,27 @@
       struct RProc *p;
 
       p = mrbb_closure_new(mrb, GETARG_Bx(i), (unsigned int)GETIREP_NLOCALS());
-      p->target_class = mrb_class(mrb, self);
+      p->target_class = mrb_class(mrb, self); // TODO check why/if we need
       /* push ensure_stack */
-      if (mrb->esize <= mrb->ci->eidx) {
-        if (mrb->esize == 0) mrb->esize = 16;
-        else mrb->esize *= 2;
-        mrb->ensure = (struct RProc **)mrb_realloc(mrb, mrb->ensure, sizeof(struct RProc*) * mrb->esize);
+      if (mrb->c->esize <= mrb->c->ci->eidx) {
+        if (mrb->c->esize == 0) mrb->c->esize = 16;
+        else mrb->c->esize *= 2;
+        mrb->c->ensure = (struct RProc **)mrb_realloc(mrb, mrb->c->ensure, sizeof(struct RProc*) * mrb->c->esize);
       }
-      mrb->ensure[mrb->ci->eidx++] = p;
-      mrb->arena_idx = ai;
-
+      mrb->c->ensure[mrb->c->ci->eidx++] = p;
+      ARENA_RESTORE(mrb, ai);
       NEXT;
     }
 
     CASE(OP_EPOP) {
       /* A      A.times{ensure_pop().call} */
-      int n;
       int a = GETARG_A(i);
+      mrb_callinfo *ci = mrb->c->ci;
+      int n, eidx = ci->eidx;
 
-      for (n=0; n<a; n++) {
-        mrbb_ecall(mrb, mrb->ensure[--mrb->ci->eidx]);
+      for (n=0; n<a && eidx > ci[-1].eidx; n++) {
+        mrbb_ecall(mrb, mrb->c->ensure[--mrb->c->ci->eidx]);
+        ARENA_RESTORE(mrb, ai);
       }
-      mrb->arena_idx = ai;
-
       NEXT;
     }

@@ -15,45 +15,41 @@ The value below allows about 60000 recursive calls in the simplest case. */
 static void
 stack_extend(mrb_state *mrb, int room, int keep)
 {
-  int size, off;
-  if (mrb->stack + room >= mrb->stend) {
-    mrb_value *oldbase = mrb->stbase;
+  if (mrb->c->stack + room >= mrb->c->stend) {
+    mrb_value *oldbase = mrb->c->stbase;
+    int size = mrb->c->stend - mrb->c->stbase;
+    int off = mrb->c->stack - mrb->c->stbase;
 
-    size = mrb->stend - mrb->stbase;
-    off = mrb->stack - mrb->stbase;
-
-    /* Use linear stack growth.
-       It is slightly slower than doubling thestack space,
-       but it saves memory on small devices. */
+#ifdef MRB_STACK_EXTEND_DOUBLING
     if (room <= size)
+      size *= 2;
+    else
+      size += room;
+#else
+    /* Use linear stack growth.
+       It is slightly slower than doubling the stack space,
+       but it saves memory on small devices. */
+    if (room <= MRB_STACK_GROWTH)
       size += MRB_STACK_GROWTH;
     else
       size += room;
+#endif
 
-    mrb->stbase = (mrb_value *)mrb_realloc(mrb, mrb->stbase, sizeof(mrb_value) * size);
-    mrb->stack = mrb->stbase + off;
-    mrb->stend = mrb->stbase + size;
-    envadjust(mrb, oldbase, mrb->stbase);
+    mrb->c->stbase = (mrb_value *)mrb_realloc(mrb, mrb->c->stbase, sizeof(mrb_value) * size);
+    mrb->c->stack = mrb->c->stbase + off;
+    mrb->c->stend = mrb->c->stbase + size;
+    envadjust(mrb, oldbase, mrb->c->stbase);
+
     /* Raise an exception if the new stack size will be too large,
-    to prevent infinite recursion. However, do this only after resizing the stack, so mrb_raisef has stack space to work with. */
-    if(size > MRB_STACK_MAX) {
-      //mrb_raisef(mrb, E_RUNTIME_ERROR, "stack level too deep. (limit=%d)", MRB_STACK_MAX);
+       to prevent infinite recursion. However, do this only after resizing the stack, so mrb_raise has stack space to work with. */
+    if (size > MRB_STACK_MAX) {
+      init_new_stack_space(mrb, room, keep);
+      // mrb_raise(mrb, E_SYSSTACK_ERROR, "stack level too deep. (limit=" MRB_STRINGIZE(MRB_STACK_MAX) ")");
       const char *msg = "stack level too deep."; // TODO: tell limit
       mrb_value exc = mrb_exc_new(mrb, E_RUNTIME_ERROR, msg, strlen(msg));
-      mrb->exc = (struct RObject*)mrb_object(exc);
+      mrb->exc = (struct RObject*)mrb_obj_ptr(exc);
       mrbb_raise(mrb);
     }
   }
-
-  if (room > keep) {
-    int i;
-    for (i=keep; i<room; i++) {
-#ifndef MRB_NAN_BOXING
-      static const mrb_value mrb_value_zero = { { 0 } };
-      mrb->stack[i] = mrb_value_zero;
-#else
-      SET_NIL_VALUE(mrb->stack[i]);
-#endif
-    }
-  }
+  init_new_stack_space(mrb, room, keep);
 }

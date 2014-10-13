@@ -7,6 +7,6 @@ void stackdump(mrb_state *mrb, int n)
   printf("Stackdump: \n");
   for (; i<n; i++) {
     printf("%d: ", i);
-    mrb_p(mrb, mrb->stack[i]);
+    mrb_p(mrb, mrb->c->stack[i]);
   }
 }

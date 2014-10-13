@@ -4,12 +4,12 @@
 mrb_value mrbb_proc_call(mrb_state *mrb, mrb_value self)
 {
   mrb_callinfo *ci;
-  mrb_value recv = mrb->stack[0];
+  mrb_value recv = mrb->c->stack[0];
   struct RProc *m = mrb_proc_ptr(recv);
   int ai = mrb->arena_idx;
 
   /* replace callinfo */
-  ci = mrb->ci;
+  ci = mrb->c->ci;
   ci->target_class = m->target_class;
   ci->proc = m;
   if (m->env) {
@@ -17,7 +17,7 @@ if (m->env->mid) {
 ci->mid = m->env->mid;
 }
     if (!m->env->stack) {
-      m->env->stack = mrb->stack;
+      m->env->stack = mrb->c->stack;
     }
   }
 
@@ -28,15 +28,15 @@ ci->mid = m->env->mid;
     if (mrb->exc) mrbb_raise(mrb);
     /* pop stackpos */
     // already done by funcall
-//ci = mrb->ci;
-    //mrb->stack = mrb->stbase + ci->stackidx;
+//ci = mrb->c->ci;
+    //mrb->c->stack = ci->stackent;
 //regs[ci->acc] = recv;
 //pc = ci->pc;
     //cipop(mrb);
   } else {
     mrb_irep *irep = m->body.irep;
     if (!irep) {
-      mrb->stack[0] = mrb_nil_value();
+      mrb->c->stack[0] = mrb_nil_value();
       return mrb_nil_value();
     }
     ci->nregs = irep->nregs;
@@ -46,7 +46,7 @@ ci->mid = m->env->mid;
     else {
       stack_extend(mrb, irep->nregs,  ci->argc+2);
     }
-    mrb->stack[0] = m->env->stack[0];
+    mrb->c->stack[0] = m->env->stack[0];
     recv = mrb_run(mrb, m, recv);
   }
   // TODO: only overwrite this method for Cfunc procs
@@ -81,16 +81,16 @@ struct RProc *mrbb_closure_new(mrb_state* mrb, mrb_func_t cfunc, unsigned int nl
   // stolen from mrb_closure_new()
   struct REnv *e;
 
-  if (!mrb->ci->env) {
-    e = (struct REnv*)mrb_obj_alloc(mrb, MRB_TT_ENV, (struct RClass*)mrb->ci->proc->env);
+  if (!mrb->c->ci->env) {
+    e = (struct REnv*)mrb_obj_alloc(mrb, MRB_TT_ENV, (struct RClass*)mrb->c->ci->proc->env);
     e->flags= nlocals;
-    e->mid = mrb->ci->mid;
-    e->cioff = mrb->ci - mrb->cibase;
-    e->stack = mrb->stack;
-    mrb->ci->env = e;
+    e->mid = mrb->c->ci->mid;
+    e->cioff = mrb->c->ci - mrb->c->cibase;
+    e->stack = mrb->c->stack;
+    mrb->c->ci->env = e;
   }
   else {
-    e = mrb->ci->env;
+    e = mrb->c->ci->env;
   }
   p->env = e;
 

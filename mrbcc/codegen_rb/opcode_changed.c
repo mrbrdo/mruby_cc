@@ -11,7 +11,7 @@
       mrb_value ret;
 
       ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 0);
-      if (mrb->ci->proc == (struct RProc *) -1) {
+      if (mrb->c->ci->proc == (struct RProc *) -1) {
         //cipush(mrb);
         return ret;
       }
@@ -25,7 +25,7 @@
       mrb_value ret;
 
       ret = mrbb_send_r(mrb, syms[GETARG_B(i)], n, &regs, a, 1);
-      if (mrb->ci->proc == (struct RProc *) -1) {
+      if (mrb->c->ci->proc == (struct RProc *) -1) {
         //cipush(mrb);
         return ret;
       }
@@ -43,7 +43,7 @@
       }
 /*    L_STOP:
       {
-  int n = mrb->ci->eidx;
+  int n = mrb->c->ci->eidx;
 
   while (n--) {
     ecall(mrb, n);
@@ -58,11 +58,11 @@
 
     CASE(OP_RETURN) {
       {
-        mrb_callinfo *ci = mrb->ci;
-        int eidx = mrb->ci->eidx;
-        int ridx = mrb->ci->ridx;
+        mrb_callinfo *ci = mrb->c->ci;
+        int eidx = mrb->c->ci->eidx;
+        int ridx = mrb->c->ci->ridx;
         mrb_value v = regs[GETARG_A(i)];
-        struct RProc *proc = mrb->ci->proc;
+        struct RProc *proc = mrb->c->ci->proc;
 
         if (mrb->exc) {
           mrbb_raise(mrb);
@@ -77,15 +77,15 @@
               localjump_error(mrb, LOCALJUMP_ERROR_RETURN);
               goto L_RAISE;
             }
-            mrb->ci = mrb->cibase + e->cioff;
-            if (ci == mrb->cibase) {
+            mrb->c->ci = mrb->c->cibase + e->cioff;
+            if (ci == mrb->c->cibase) {
               localjump_error(mrb, LOCALJUMP_ERROR_RETURN);
               goto L_RAISE;
             }
             break;
           }
         case OP_R_NORMAL:
-          if (ci == mrb->cibase) {
+          if (ci == mrb->c->cibase) {
             localjump_error(mrb, LOCALJUMP_ERROR_RETURN);
             goto L_RAISE;
           }
@@ -95,17 +95,17 @@
             localjump_error(mrb, LOCALJUMP_ERROR_BREAK);
             goto L_RAISE;
           }
-          mrb->ci = mrb->cibase + proc->env->cioff + 1;
+          mrb->c->ci = mrb->c->cibase + proc->env->cioff + 1;
           break;
         default:
           /* cannot happen */
           break;
         }
 
-        while (eidx > mrb->ci[-1].eidx) {
-          mrbb_ecall(mrb, mrb->ensure[--eidx]);
+        while (eidx > mrb->c->ci[-1].eidx) {
+          mrbb_ecall(mrb, mrb->c->ensure[--eidx]);
         }
-        while (ridx > mrb->ci[-1].ridx) { // just in case?
+        while (ridx > mrb->c->ci[-1].ridx) { // just in case?
           mrbb_rescue_pop(mrb);
         }
         /*

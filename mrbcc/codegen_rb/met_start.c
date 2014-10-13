@@ -4,7 +4,7 @@ mrb_value MET_NAME(mrb_state *mrb, mrb_value self) {
 
   // I have to set up my own stack
   {
-    mrb_callinfo *ci = mrb->ci;
+    mrb_callinfo *ci = mrb->c->ci;
     ci->nregs = FUNC_NREGS + 2;
     if (ci->argc < 0) {
       stack_extend(mrb, (FUNC_NREGS < 3) ? 3 : FUNC_NREGS, 3);
@@ -14,5 +14,5 @@ mrb_value MET_NAME(mrb_state *mrb, mrb_value self) {
     }
   }
 
-  regs = mrb->stack;
+  regs = mrb->c->stack;
   regs[0] = self;

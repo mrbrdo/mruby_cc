@@ -9,13 +9,6 @@ class MrbOpcodes
     Dir[File.expand_path("../codegen_rb/opcode_*.c", __FILE__)].each do |fn|
       add_opcodes(File.read(fn))
     end
-
-    # fix body for OP_CMP
-    @opcode_impl.each_pair do |k,v|
-      @opcode_impl[k] = v.gsub(/OP_CMP\(([^\)]*)\)/) do
-        "int a = GETARG_A(i); OP_CMP(#{$1})"
-      end
-    end
   end
 
   def opcodes

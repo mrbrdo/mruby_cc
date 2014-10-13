@@ -28,7 +28,7 @@ mrb_value mrbcc_load_so(mrb_state *mrb, mrb_value self, const char *filename) {
     return mrb_nil_value();
   }
   ary = mrb_iv_get(mrb, mrb_obj_value(mrb->kernel_module),
-    mrb_intern(mrb, "@loaded_compiled_mrb_handles"));
+    mrb_intern_cstr(mrb, "@loaded_compiled_mrb_handles"));
   mrb_ary_push(mrb, ary, mrb_fixnum_value((mrb_int) handle)); // TODO warning
   return (*entry_point)(mrb, self);
 }
@@ -55,7 +55,7 @@ main(int argc, char **argv)
   }
 
   mrb_iv_set(mrb, mrb_obj_value(mrb->kernel_module),
-    mrb_intern(mrb, "@loaded_compiled_mrb_handles"),
+    mrb_intern_cstr(mrb, "@loaded_compiled_mrb_handles"),
       mrb_ary_new(mrb));
 
   // define load method on kernel

@@ -9,10 +9,23 @@
       else {
         p = mrbb_proc_new(mrb, GETARG_b(i));
       }
-      p->target_class = (mrb->ci) ? mrb->ci->target_class : 0;
+
+      // TODO: we need this but why?
+      p->target_class = (mrb->c->ci) ? mrb->c->ci->target_class : 0;
+
+      if ((c & OP_L_METHOD) && !(c & OP_L_CAPTURE)) {
+        if (p->target_class->tt == MRB_TT_SCLASS) {
+          mrb_value klass;
+          klass = mrb_obj_iv_get(mrb,
+                                 (struct RObject *)p->target_class,
+                                 mrb_intern_lit(mrb, "__attached__"));
+          p->target_class = mrb_class_ptr(klass);
+        }
+      }
+
       if (c & OP_L_STRICT) p->flags |= MRB_PROC_STRICT;
       regs[GETARG_A(i)] = mrb_obj_value(p);
-      mrb->arena_idx = ai;
+      ARENA_RESTORE(mrb, ai);
       NEXT;
     }
 
@@ -28,12 +41,12 @@
       //ci->pc = pc + 1;
       ci->acc = a;
       ci->mid = 0;
-      ci->stackidx = mrb->stack - mrb->stbase;
+      ci->stackent = mrb->c->stack;
       ci->argc = 0;
       ci->target_class = mrb_class_ptr(recv); // TODO: check if we might need mrb_class() instead
 
       /* prepare stack */
-      mrb->stack += a;
+      mrb->c->stack += a;
 
       p = mrbb_proc_new(mrb, GETARG_Bx(i));
       // p = mrb_proc_new(mrb, mrb->irep[irep->idx+GETARG_Bx(i)]);
@@ -43,11 +56,12 @@
       // if (MRB_PROC_CFUNC_P(p)) {
       // else part removed since it is always CFUNC
 
-      mrb->stack[0] = p->body.func(mrb, recv);
-      mrb->arena_idx = ai;
+      ci->nregs = 0;
+      mrb->c->stack[0] = p->body.func(mrb, recv);
+      mrb_gc_arena_restore(mrb, ai);
       if (mrb->exc) mrbb_raise(mrb);
       /* pop stackpos */
-      regs = mrb->stack = mrb->stbase + mrb->ci->stackidx;
+      regs = mrb->c->stack = mrb->c->ci->stackent;
       cipop(mrb);
       NEXT;
     }

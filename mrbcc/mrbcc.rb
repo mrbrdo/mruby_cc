@@ -36,7 +36,7 @@ parser = RiteParser.new("#{TMP_DIR}/tmp_out.mrb")
 
 # create C file
 File.open("#{BUILD_DIR}/c_files/out.c", "w") do |wf|
-  wf.write(OpcodeParser.new(parser, opcodes.opcodes, "script_entry_point", 0).process_irep)
+  wf.write(OpcodeParser.new(parser, opcodes.opcodes, "script_entry_point").process_irep)
 end
 
 # compile C file
@@ -47,5 +47,5 @@ FileUtils.mv("#{BUILD_DIR}/mrbcc_out.so", "#{RB_FILE_DIR}/#{rb_filename_noext}.s
 
 # clean up
 FileUtils.rm(rb_filename.gsub(/\.rb$/, ".mrb"), :force => true)
-FileUtils.rm(File.expand_path("#{TMP_DIR}/tmp_out.mrb", __FILE__), :force => true)
-FileUtils.rm(File.expand_path("#{TMP_DIR}/tmp_out.rb", __FILE__), :force => true)
+#FileUtils.rm(File.expand_path("#{TMP_DIR}/tmp_out.mrb", __FILE__), :force => true)
+#FileUtils.rm(File.expand_path("#{TMP_DIR}/tmp_out.rb", __FILE__), :force => true)
