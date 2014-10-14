@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "c_files/mrbb_struct.c"
 #include "c_files/debug.c"
 #include "c_files/modified_defines.c"
 #include "c_files/vm_extern.c"

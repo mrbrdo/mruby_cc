@@ -24,6 +24,7 @@ build/c_files/out.c
 build/*.o-*
 testsuite
 build-binary/mrbcc_out
+build-binary/mruby.xcodeproj
 *.so
 runner
 config.log

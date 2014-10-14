@@ -110,6 +110,10 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
       stack_extend(mrb, irep->nregs,  n+2);
     }
     val = mrb_run(mrb, m, recv);
+    if (mrb->exc) {
+      printf("TODO: exception raised from mruby code:\n");
+      mrb_p(mrb, mrb_obj_value(mrb->exc));fflush(stdout);
+    }
   }
   *regs_ptr = mrb->c->stack; // stack_extend might realloc stack
   return val;

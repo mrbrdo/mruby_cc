@@ -17,7 +17,10 @@
 
         // go to rescue
         mrbb_rescue_pop(mrb);
-        mrb->jmp = (struct mrb_jmpbuf *)mrb->c->rescue[mrb->c->ci->ridx-1];
+        if (mrbb_is_c_rescue(mrb->c->rescue[mrb->c->ci->ridx-1])) {
+          struct mrb_rescue_code *rescue_code = (struct mrb_rescue_code *) mrb->c->rescue[mrb->c->ci->ridx-1];
+          mrb->jmp = rescue_code->jmp;
+        }
         goto rescue_label(GETARG_sBx(i));
       }
       MRB_END_EXC(&buf);

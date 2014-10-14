@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "c_files/mrbb_struct.c"
 #include "c_files/debug.c"
 #include "c_files/modified_defines.c"
 #include "c_files/vm_extern.c"
@@ -80,7 +81,7 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   p = mrbb_proc_new(mrb, script_entry_point);
   p->target_class = ci->target_class;
   ci->proc = p;
-
+    
   result = p->body.func(mrb, recv);
   mrb->arena_idx = ai;
   mrb_gc_protect(mrb, result);
