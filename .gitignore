@@ -23,7 +23,7 @@ tmp_out.mrb
 build/c_files/out.c
 build/*.o-*
 testsuite
-build-standalone/mrbcc_out
+build-binary/mrbcc_out
 *.so
 runner
 config.log

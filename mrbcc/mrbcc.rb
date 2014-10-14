@@ -4,19 +4,31 @@ require_relative './preparser'
 require_relative './codegen'
 require_relative './mrb_opcodes'
 require 'fileutils'
+require 'rbconfig'
 
 MRUBY_PATH = File.expand_path("../../mruby", __FILE__)
 MRBC_BIN = "#{MRUBY_PATH}/bin/mrbc"
 TMP_DIR = File.expand_path("../../tmp", __FILE__)
+IS_WINDOWS = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/)
 
-it = ARGV[0]
+it = ARGV.shift
+binary = if it == "-b"
+  # standalone binary compile
+  it = ARGV.shift
+  true
+end
+
 RB_FILE_PATH = if it.start_with?("/") || it[1] == ":"
   it
 else
   "#{Dir.pwd}/#{it}"
 end
 RB_FILE_DIR = File.expand_path("..", RB_FILE_PATH)
-BUILD_DIR = File.expand_path("../../build", __FILE__)
+BUILD_DIR = if binary
+  File.expand_path("../../build-binary", __FILE__)
+else
+  File.expand_path("../../build", __FILE__)
+end
 
 puts "Compiling..."
 
@@ -43,7 +55,8 @@ end
 puts %x[cd "#{BUILD_DIR}" && make 2>&1 | grep "error:"]
 
 # copy C file
-FileUtils.mv("#{BUILD_DIR}/mrbcc_out.so", "#{RB_FILE_DIR}/#{rb_filename_noext}.so")
+ext = binary ? "" : (IS_WINDOWS ? ".dll" : ".so")
+FileUtils.mv("#{BUILD_DIR}/mrbcc_out#{ext}", "#{RB_FILE_DIR}/#{rb_filename_noext}#{ext}")
 
 # clean up
 FileUtils.rm(rb_filename.gsub(/\.rb$/, ".mrb"), :force => true)
