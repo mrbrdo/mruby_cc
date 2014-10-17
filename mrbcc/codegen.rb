@@ -44,6 +44,13 @@ class OpcodeParser
     end
   end
 
+  def c_comment_escape(str)
+    # very simple for now, could be improved
+    str.gsub(/[^\w\d ?_!#,+\.\-]/m) do |c|
+      "*"
+    end
+  end
+
   def value_from_pool_to_code(val)
     case val
     when Float
@@ -147,7 +154,7 @@ class OpcodeParser
 
       # symbols
       @instr_body.gsub!(/syms\[([^\]]+)\]/) do
-        "_syms_#{@rep_name}[#{$1}]"
+        "_syms_#{@rep_name}[#{$1}]/*#{c_comment_escape(@irep.syms[$1.to_i])}*/"
       end
       # string literals
       #@instr_body.gsub!(/mrb_str_literal\(mrb, (pool\[[^\]]+\])\)/) do
@@ -155,7 +162,7 @@ class OpcodeParser
       #end
       # pool
       @instr_body.gsub!(/pool\[([^\]]+)\]/) do
-        "_pool_#{@rep_name}[#{$1}]"
+        "_pool_#{@rep_name}[#{$1}]/*#{c_comment_escape(@irep.pool[$1.to_i].to_s)}*/"
       end
       # raise
       @instr_body.gsub!("goto L_RAISE;", "mrbb_raise(mrb);")
