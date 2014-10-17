@@ -27,6 +27,8 @@
 #include "c_files/proc.c"
 #include "c_files/method_dispatch.c"
 
+struct RProc *interpreted_proc_call = 0;
+
 // compiled code
 #include "c_files/out.c"
 #include <dlfcn.h>
@@ -59,6 +61,7 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   // Patch Proc
   {
     struct RProc *m = mrb_proc_new_cfunc(mrb, mrbb_proc_call);
+    interpreted_proc_call = mrb_method_search_vm(mrb, &mrb->proc_class, mrb_intern_cstr(mrb, "call"));
     mrb_define_method_raw(mrb, mrb->proc_class, mrb_intern_cstr(mrb, "call"), m);
     mrb_define_method_raw(mrb, mrb->proc_class, mrb_intern_cstr(mrb, "[]"), m);
   }
@@ -81,7 +84,7 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   p = mrbb_proc_new(mrb, script_entry_point);
   p->target_class = ci->target_class;
   ci->proc = p;
-    
+
   result = p->body.func(mrb, recv);
   mrb->arena_idx = ai;
   mrb_gc_protect(mrb, result);
@@ -103,10 +106,6 @@ main(int argc, char **argv)
     fprintf(stderr, "Invalid mrb_state, exiting driver");
     return EXIT_FAILURE;
   }
-
-  mrb_iv_set(mrb, mrb_obj_value(mrb->kernel_module),
-    mrb_intern_cstr(mrb, "@loaded_compiled_mrb_handles"),
-      mrb_ary_new(mrb));
 
   mrbb_exec_entry_point(mrb, mrb_top_self(mrb));
 

@@ -1,3 +1,5 @@
+static mrb_code c_break_code = MKOP_A(OP_STOP, 0);
+
 void
 mrbb_send_setup_stack_extend(mrb_state *mrb, mrb_value self, mrb_value *argv, int argc)
 {
@@ -61,6 +63,9 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
   /* prepare stack */
   mrb->c->stack += a;
 
+  mrb_value *stackent = mrb->c->ci->stackent;
+  ptrdiff_t cioff = mrb->c->ci - mrb->c->cibase;
+
   if (MRB_PROC_CFUNC_P(m)) {
     if (n == CALL_MAXARGS) { // TODO this is not necessary for MRBCC func?
       ci->argc = -1;
@@ -72,31 +77,8 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
     }
 
     int ai = mrb->arena_idx;
-    mrb_value *stackent = mrb->c->ci->stackent;
-    uintptr_t cioff = mrb->c->ci - mrb->c->cibase;
     val = m->body.func(mrb, recv);
     mrb->arena_idx = ai;
-    mrb_gc_protect(mrb, val); // not needed really? safeguard just in case?
-    if ((mrb->c->ci - mrb->c->cibase) == cioff) {
-      mrb->c->stack = stackent;
-      cipop(mrb);
-    } else { // break
-      mrb->c->stack = stackent; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
-      // We NEED to cipop the first time, but not after that
-      if (mrb->c->ci->proc != (struct RProc *) -1) {
-        cipop(mrb);
-        cipush(mrb);
-      }
-      mrb->c->ci->proc = (struct RProc *)-1;
-    }
-    // TODO: if (MRB_PROC_MRBCFUNC_P(m))
-    /*} else { // this improves speed by some small factor
-        val = m->body.func(mrb, recv);
-        // pop stackpos
-        mrb->c->stack = mrb->c->ci->stackent;
-        cipop(mrb);
-    }*/
-    if (mrb->exc) mrbb_raise(mrb); // we can do this before cipop... see OP_SEND
   }
   else {
     mrb_irep *irep = m->body.irep;
@@ -114,7 +96,27 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
       printf("TODO: exception raised from mruby code:\n");
       mrb_p(mrb, mrb_obj_value(mrb->exc));fflush(stdout);
     }
+    if (mrb->c->ci[1].pc != &c_break_code) {
+      // because OP_RETURN will cipop()
+      cioff--;
+    }
   }
+
+  // BREAK
+  if ((mrb->c->ci - mrb->c->cibase) != cioff) {
+    mrb->c->stack = stackent; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
+    // We NEED to cipop the first time, but not after that
+    if (mrb->c->ci->proc != (struct RProc *) -1) {
+      cipop(mrb);
+      cipush(mrb);
+    }
+    mrb->c->ci->proc = (struct RProc *)-1;
+  } else if (MRB_PROC_CFUNC_P(m)) {
+    mrb->c->stack = stackent;
+    cipop(mrb);
+  }
+  if (mrb->exc) mrbb_raise(mrb); // we can do this before cipop... see OP_SEND
+
   *regs_ptr = mrb->c->stack; // stack_extend might realloc stack
   return val;
 }

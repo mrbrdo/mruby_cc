@@ -368,6 +368,7 @@ assert("Array (Longish inline array)") do
   ary.each {|p| h[p.class] += 1}
   assert_equal({Array=>200}, h)
 end
+
 ##
 # BasicObject
 
@@ -5495,6 +5496,49 @@ assert('braced \u notation test') do
   # Mininum and maximum four byte characters
   assert_equal("\u{10000}",  "\xF0\x90\x80\x80")
   assert_equal("\u{10FFFF}", "\xF4\x8F\xBF\xBF")
+end
+
+assert('Kernel.loop', '15.3.1.2.8') do
+  i = 0
+
+  Kernel.loop do
+    i += 1
+    break if i == 100
+  end
+
+  assert_equal 100, i
+end
+
+assert('Kernel#loop', '15.3.1.3.29') do
+  i = 0
+
+  loop do
+    i += 1
+    break if i == 100
+  end
+
+  assert_equal i, 100
+end
+
+assert('Kernel.iterator?', '15.3.1.2.5') do
+  assert_false Kernel.iterator?
+end
+
+assert('Hash#dup') do
+  a = { 'a' => 1 }
+  b = a.dup
+  a['a'] = 2
+  assert_equal({'a' => 1}, b)
+end
+
+assert('Exception#backtrace') do
+  assert_nothing_raised do
+    begin
+      raise "get backtrace"
+    rescue => e
+      e.backtrace
+    end
+  end
 end
 
 report

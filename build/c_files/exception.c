@@ -69,7 +69,7 @@ void mrbb_rescue_push(mrb_state *mrb, struct mrb_jmpbuf *c_jmp) {
     mrb->c->rescue = (mrb_code **)mrb_realloc(mrb, mrb->c->rescue, sizeof(mrb_code*) * mrb->c->rsize);
   }
   memmove(c_jmp_copy, c_jmp, sizeof(struct mrb_jmpbuf));
-  rescue_code->code = &c_rescue_code; // TODO: At some point we want to make this an interpreted function that can call our c exception handler function
+  rescue_code->code = c_rescue_code; // TODO: At some point we want to make this an interpreted function that can call our c exception handler function
   rescue_code->jmp = c_jmp_copy;
   mrb->c->rescue[mrb->c->ci->ridx++] = (mrb_code *) rescue_code;
 }
@@ -131,7 +131,7 @@ void mrbb_raise(mrb_state *mrb) {
 }
 
 int mrbb_is_c_rescue(mrb_code *entry) {
-  if (entry == &c_rescue_code)
+  if (entry && *entry == c_rescue_code)
     return 1;
   else
     return 0;
@@ -153,4 +153,5 @@ void mrbb_rescue_pop(mrb_state *mrb) {
     free(rescue_code);
   } else
     mrb->c->ci->ridx--;
+    // TODO: call interpreted handler
 }

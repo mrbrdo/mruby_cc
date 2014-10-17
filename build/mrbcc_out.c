@@ -27,6 +27,8 @@
 #include "c_files/proc.c"
 #include "c_files/method_dispatch.c"
 
+struct RProc *interpreted_proc_call = 0;
+
 // compiled code
 #include "c_files/out.c"
 
@@ -57,7 +59,9 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
 
   // Patch Proc
   {
+    // TODO: this should be done only once, if multiple modules are loaded - could use instance variable to remember between modules
     struct RProc *m = mrb_proc_new_cfunc(mrb, mrbb_proc_call);
+    interpreted_proc_call = mrb_method_search_vm(mrb, &mrb->proc_class, mrb_intern_cstr(mrb, "call"));
     mrb_define_method_raw(mrb, mrb->proc_class, mrb_intern_cstr(mrb, "call"), m);
     mrb_define_method_raw(mrb, mrb->proc_class, mrb_intern_cstr(mrb, "[]"), m);
   }

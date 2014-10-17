@@ -58,16 +58,6 @@ assert('Integer#*', '15.2.8.3.3') do
   assert_float e, d
 end
 
-assert('Kernel.loop', '15.3.1.2.8') do
-  i = 0
-
-  Kernel.loop do
-    i += 1
-    break if i == 100
-  end
-
-  assert_equal 100, i
-end
 
 assert('Issue 1467') do
   module M1
@@ -89,15 +79,4 @@ assert('Issue 1467') do
 
   C1.new
   C2.new
-end
-
-assert('Kernel#loop', '15.3.1.3.29') do
-  i = 0
-
-  loop do
-    i += 1
-    break if i == 100
-  end
-
-  assert_equal i, 100
 end

@@ -47,18 +47,6 @@ assert('GC.generational_mode=') do
   end
 end
 
-assert('Kernel.iterator?', '15.3.1.2.5') do
-  assert_false Kernel.iterator?
-end
-
-assert('Hash#dup') do
-  a = { 'a' => 1 }
-  b = a.dup
-  a['a'] = 2
-  assert_equal({'a' => 1}, b)
-end
-
-
 assert('Exception 19') do
   class Class4Exception19
     def a
@@ -84,16 +72,6 @@ assert('Exception 19') do
     end
   end
   assert_equal [true, true], Class4Exception19.new.a
-end
-
-assert('Exception#backtrace') do
-  assert_nothing_raised do
-    begin
-      raise "get backtrace"
-    rescue => e
-      e.backtrace
-    end
-  end
 end
 
 assert('Raise in ensure') do

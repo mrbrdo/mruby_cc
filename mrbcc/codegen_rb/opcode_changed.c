@@ -91,11 +91,19 @@
           }
           break;
         case OP_R_BREAK:
-          if (proc->env->cioff < 0) {
+          if (!proc->env || !MRB_ENV_STACK_SHARED_P(proc->env)) {
             localjump_error(mrb, LOCALJUMP_ERROR_BREAK);
             goto L_RAISE;
           }
+          ci = mrb->c->ci;
           mrb->c->ci = mrb->c->cibase + proc->env->cioff + 1;
+          while (ci > mrb->c->ci) {
+            if (ci[-1].acc == CI_ACC_SKIP) {
+              mrb->c->ci = ci;
+              break;
+            }
+            ci--;
+          }
           break;
         default:
           /* cannot happen */
@@ -105,15 +113,21 @@
         while (eidx > mrb->c->ci[-1].eidx) {
           mrbb_ecall(mrb, mrb->c->ensure[--eidx]);
         }
-        while (ridx > mrb->c->ci[-1].ridx) { // just in case?
-          mrbb_rescue_pop(mrb);
+
+        if (GETARG_B(i) == OP_R_BREAK) {
+          if (mrb->c->ci->acc != CI_ACC_SKIP) {
+            ci--;
+            regs = mrb->c->stack = ci->stackent;
+            regs[ci->proc->body.irep->nlocals] = v;
+            mrb->c->ci->stackent = ci->stackent;
+            mrb->c->ci->pc = &c_break_code;
+            //mrb->c->ci->pc = mrb->c->ci->pc;
+            mrb->c->ci->target_class = 0;
+            return mrb->c->stack[mrb->c->ci->acc];
+          } else {
+            mrb->c->ci = mrb->c->cibase + proc->env->cioff + 1;
+          }
         }
-        /*
-        if (acc < 0) {
-          mrb->jmp = prev_jmp;
-          return v;
-        }
-        */
         return v;
       }
     }
