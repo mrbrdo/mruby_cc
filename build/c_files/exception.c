@@ -76,6 +76,7 @@ void mrbb_rescue_push(mrb_state *mrb, struct mrb_jmpbuf *c_jmp) {
 #else
   mrb->c->rescue[mrb->c->ci->ridx++] = (mrb_code *) c_jmp_copy;
 #endif
+  mrb->jmp = c_jmp_copy;
 }
 
 void mrbb_raise(mrb_state *mrb) {
@@ -169,4 +170,17 @@ void mrbb_rescue_pop(mrb_state *mrb) {
   mrb->c->ci->ridx--;
   free(rescue);
 #endif
+
+  if (mrb->c->ci->ridx > 0) {
+#ifdef MRBB_COMPAT_INTERPRETER
+    if (mrbb_is_c_rescue(mrb->c->rescue[mrb->c->ci->ridx-1])) {
+      struct mrb_rescue_code *rescue_code = (struct mrb_rescue_code *) mrb->c->rescue[mrb->c->ci->ridx-1];
+      mrb->jmp = rescue_code->jmp;
+    }
+#else
+    mrb->jmp = (struct mrb_jmpbuf *)mrb->c->rescue[mrb->c->ci->ridx-1];
+#endif
+  } else {
+    mrb->jmp = NULL;
+  }
 }

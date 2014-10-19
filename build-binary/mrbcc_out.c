@@ -44,9 +44,10 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   mrb_value result;
 
   MRB_TRY(&c_jmp) {
-    mrb->jmp = &c_jmp;
+    mrbb_rescue_push(mrb, &c_jmp);
   }
   MRB_CATCH(&c_jmp) {
+    mrbb_rescue_pop(mrb);
     mrb->jmp = prev_jmp;
     printf("Uncaught exception:\n");
     mrb_p(mrb, mrb_obj_value(mrb->exc));
@@ -54,7 +55,6 @@ extern mrb_value mrbb_exec_entry_point(mrb_state *mrb, mrb_value recv) {
   }
   MRB_END_EXC(&c_jmp);
 
-  mrbb_rescue_push(mrb, &c_jmp);
 
   if (!mrb->c->stack) {
     stack_init(mrb);
