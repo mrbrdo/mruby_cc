@@ -1,6 +1,5 @@
 GC.disable
 
-#include 'mruby/mrblib/*.rb'
 #include 'mruby/test/assert.rb'
 
 ##
