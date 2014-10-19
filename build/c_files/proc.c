@@ -13,6 +13,7 @@ mrb_value mrbb_proc_call(mrb_state *mrb, mrb_value self)
 
   // If interpreted Proc called from interpreted code
   if (mrb->c->ci->pc) {
+#ifdef MRBB_COMPAT_INTERPRETER
     // See OP_SEND, we are migrating from MRB_PROC_CFUNC_P if body to else body
     mrb_irep *irep = interpreted_proc_call->body.irep;
     mrb_value *stackent = mrb->c->stack;
@@ -32,6 +33,10 @@ mrb_value mrbb_proc_call(mrb_state *mrb, mrb_value self)
     ci->stackent = stackent;
 
     return mrb->c->stack[0];
+#else
+    mrb->exc = mrb_obj_ptr(mrb_exc_new_str(mrb, E_RUNTIME_ERROR, mrb_str_new_cstr(mrb, "Attempt to call interpreter but MRBB_COMPAT_INTERPRETER is not enabled. (mrbb_proc_call)")));
+    mrbb_raise(mrb);
+#endif
   } else {
     /* replace callinfo */
     ci->target_class = m->target_class;
@@ -58,6 +63,7 @@ mrb_value mrbb_proc_call(mrb_state *mrb, mrb_value self)
       //pc = ci->pc;
       //cipop(mrb);
     } else {
+#ifdef MRBB_COMPAT_INTERPRETER
       mrb_irep *irep = m->body.irep;
       if (!irep) {
         mrb->c->stack[0] = mrb_nil_value();
@@ -72,6 +78,10 @@ mrb_value mrbb_proc_call(mrb_state *mrb, mrb_value self)
       }
       mrb->c->stack[0] = m->env->stack[0];
       recv = mrb_run(mrb, m, recv);
+#else
+      mrb->exc = mrb_obj_ptr(mrb_exc_new_str(mrb, E_RUNTIME_ERROR, mrb_str_new_cstr(mrb, "Attempt to call interpreter but MRBB_COMPAT_INTERPRETER is not enabled. (mrbb_proc_call)")));
+      mrbb_raise(mrb);
+#endif
     }
   }
 

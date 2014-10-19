@@ -17,6 +17,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+//#define MRBB_COMPAT_INTERPRETER
+
 #include "c_files/mrbb_struct.c"
 #include "c_files/debug.c"
 #include "c_files/modified_defines.c"

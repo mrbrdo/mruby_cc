@@ -62,16 +62,20 @@ static mrb_code c_rescue_code = MKOP_A(OP_STOP, 0);
 
 void mrbb_rescue_push(mrb_state *mrb, struct mrb_jmpbuf *c_jmp) {
   struct mrb_jmpbuf *c_jmp_copy = (struct mrb_jmpbuf *)malloc(sizeof(struct mrb_jmpbuf));
-  struct mrb_rescue_code *rescue_code = (struct mrb_rescue_code *)malloc(sizeof(*rescue_code));
   if (mrb->c->rsize <= mrb->c->ci->ridx) {
     if (mrb->c->rsize == 0) mrb->c->rsize = 16;
     else mrb->c->rsize *= 2;
     mrb->c->rescue = (mrb_code **)mrb_realloc(mrb, mrb->c->rescue, sizeof(mrb_code*) * mrb->c->rsize);
   }
   memmove(c_jmp_copy, c_jmp, sizeof(struct mrb_jmpbuf));
+#ifdef MRBB_COMPAT_INTERPRETER
+  struct mrb_rescue_code *rescue_code = (struct mrb_rescue_code *)malloc(sizeof(*rescue_code));
   rescue_code->code = c_rescue_code; // TODO: At some point we want to make this an interpreted function that can call our c exception handler function
   rescue_code->jmp = c_jmp_copy;
   mrb->c->rescue[mrb->c->ci->ridx++] = (mrb_code *) rescue_code;
+#else
+  mrb->c->rescue[mrb->c->ci->ridx++] = (mrb_code *) c_jmp_copy;
+#endif
 }
 
 void mrbb_raise(mrb_state *mrb) {
@@ -131,10 +135,14 @@ void mrbb_raise(mrb_state *mrb) {
 }
 
 int mrbb_is_c_rescue(mrb_code *entry) {
+#ifdef MRBB_COMPAT_INTERPRETER
   if (entry && *entry == c_rescue_code)
     return 1;
   else
     return 0;
+#else
+  return 1;
+#endif
 }
 
 /*
@@ -146,12 +154,19 @@ void mrbb_rescue_pop(mrb_state *mrb) {
     mrb->exc = mrb_obj_ptr(mrb_exc_new_str(mrb, E_RUNTIME_ERROR, mrb_str_new_cstr(mrb, "mrbb_rescue_pop: reached end of rescue handlers")));
     mrbb_raise(mrb);
   }
+#ifdef MRBB_COMPAT_INTERPRETER
   if (mrbb_is_c_rescue(mrb->c->rescue[mrb->c->ci->ridx-1])) {
     struct mrb_rescue_code *rescue_code = (struct mrb_rescue_code *) mrb->c->rescue[mrb->c->ci->ridx-1];
     mrb->c->ci->ridx--;
     free(rescue_code->jmp);
     free(rescue_code);
-  } else
+  } else {
     mrb->c->ci->ridx--;
     // TODO: call interpreted handler
+  }
+#else
+  struct mrb_jmpbuf *rescue = (struct mrb_jmpbuf *)mrb->c->rescue[mrb->c->ci->ridx-1];
+  mrb->c->ci->ridx--;
+  free(rescue);
+#endif
 }

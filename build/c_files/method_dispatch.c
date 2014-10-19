@@ -81,6 +81,7 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
     mrb->arena_idx = ai;
   }
   else {
+#ifdef MRBB_COMPAT_INTERPRETER
     mrb_irep *irep = m->body.irep;
     ci->nregs = irep->nregs;
     if (n == CALL_MAXARGS) {
@@ -100,6 +101,10 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
       // because OP_RETURN will cipop()
       cioff--;
     }
+#else
+    mrb->exc = mrb_obj_ptr(mrb_exc_new_str(mrb, E_RUNTIME_ERROR, mrb_str_new_cstr(mrb, "Attempt to call interpreter but MRBB_COMPAT_INTERPRETER is not enabled. (mrbb_send_r)")));
+    mrbb_raise(mrb);
+#endif
   }
 
   // BREAK
