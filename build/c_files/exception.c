@@ -1,28 +1,3 @@
-
-// from vm.c
-static void
-ecall(mrb_state *mrb, int i)
-{
-  struct RProc *p;
-  mrb_callinfo *ci;
-  mrb_value *self = mrb->c->stack;
-  struct RObject *exc;
-
-  p = mrb->c->ensure[i];
-  ci = cipush(mrb);
-  ci->stackent = mrb->c->stack;
-  ci->mid = ci[-1].mid;
-  ci->acc = -1;
-  ci->argc = 0;
-  ci->proc = p;
-  ci->nregs = p->body.irep->nregs;
-  ci->target_class = p->target_class;
-  mrb->c->stack = mrb->c->stack + ci[-1].nregs;
-  exc = mrb->exc; mrb->exc = 0;
-  mrb_run(mrb, p, *self);
-  if (!mrb->exc) mrb->exc = exc;
-}
-
 static void
 mrbb_ecall(mrb_state *mrb, struct RProc *p)
 {
