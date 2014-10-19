@@ -37,23 +37,17 @@
 
     CASE(OP_STOP) {
       /*        stop VM */
-      if (mrb->exc) {
-        printf("OP_STOP reached with Exception:\n");
-        mrb_p(mrb, mrb_obj_value(mrb->exc));
-      }
-/*    L_STOP:
       {
-  int n = mrb->c->ci->eidx;
-
-  while (n--) {
-    ecall(mrb, n);
-  }
+        int eidx_stop = mrb->c->ci == mrb->c->cibase ? 0 : mrb->c->ci[-1].eidx;
+        int eidx = mrb->c->ci->eidx;
+        while (eidx > eidx_stop) {
+          mrbb_ecall(mrb, mrb->c->ensure[--eidx]);
+        }
       }
-      mrb->jmp = prev_jmp;
       if (mrb->exc) {
-  return mrb_obj_value(mrb->exc);
+        return mrb_obj_value(mrb->exc);
       }
-      return regs[irep->nlocals];*/
+      return regs[GETIREP_NLOCALS()];
     }
 
     CASE(OP_RETURN) {

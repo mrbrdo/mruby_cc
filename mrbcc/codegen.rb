@@ -175,13 +175,8 @@ class OpcodeParser
 
   def method_epilogue
     body = "\n"
-    if @entry_point
-      # TODO look at OP_STOP?
-      body += "  return mrb_nil_value();\n"
-    else
-      body += "  printf(\"ERROR: Method #{c_str_escape(@name)} did not return.\\n\");\n"
-      body += "  exit(1);\n" # so we don't get warnings about no return
-    end
+    body += "  printf(\"ERROR: Method #{c_str_escape(@name)} did not return.\\n\");\n"
+    body += "  exit(1);\n" # so we don't get warnings about no return
     body += "}\n"
   end
 
@@ -346,6 +341,10 @@ class OpcodeParser
 
   def op_getconst
     clear_debug_err_pc
+  end
+
+  def op_stop
+    @instr_body.gsub!("GETIREP_NLOCALS()", @irep.nlocals.to_s)
   end
 
   def clear_debug_err_pc
