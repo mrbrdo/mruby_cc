@@ -2,28 +2,6 @@ GC.disable
 
 #include 'mruby/test/assert.rb'
 
-assert('Issue 1467') do
-  module M1
-    def initialize()
-      super()
-    end
-  end
-
-  class C1
-    include M1
-     def initialize()
-       super()
-     end
-  end
-
-  class C2
-    include M1
-  end
-
-  C1.new
-  C2.new
-end
-
 # This causes crash sometimes immediately, but sometimes later,
 # self becomes nil instead of main and possibly crashes
 assert("Array (Longish inline array)") do

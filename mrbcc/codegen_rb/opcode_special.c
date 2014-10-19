@@ -45,7 +45,7 @@
       ci->stackent = mrb->c->stack;
       ci->argc = n;
       if (ci->argc == CALL_MAXARGS) ci->argc = -1;
-      ci->target_class = m->target_class;
+      ci->target_class = c;
       //ci->pc = pc + 1;
 
       /* prepare stack */

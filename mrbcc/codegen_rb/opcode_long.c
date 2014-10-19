@@ -31,7 +31,7 @@
       /* replace callinfo */
       ci = mrb->c->ci;
       ci->mid = mid;
-      ci->target_class = m->target_class;
+      ci->target_class = c;
       ci->argc = n;
       if (ci->argc == CALL_MAXARGS) ci->argc = -1;
 
