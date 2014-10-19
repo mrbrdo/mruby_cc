@@ -83,6 +83,22 @@ void mrbb_raise(mrb_state *mrb) {
   mrb_exc_raise(mrb, mrb_obj_value(mrb->exc));
 }
 
+void mrbb_ecall_in_rescue(mrb_state *mrb, struct RProc *ensure) {
+  struct mrb_jmpbuf *prev = mrb->jmp;
+  struct mrb_jmpbuf buf;
+
+  MRB_TRY(&buf) {
+    mrb->jmp = &buf;
+    mrbb_ecall(mrb, ensure);
+  }
+  MRB_CATCH(&buf) {
+    // mrb->exc is already set, we are already in rescue, nothing to do
+  }
+  MRB_END_EXC(&buf);
+
+  mrb->jmp = prev;
+}
+
 void mrbb_onerr_setup(mrb_state *mrb) {
   // stolen from OP_RETURN
   mrb_callinfo *ci;
@@ -94,18 +110,15 @@ void mrbb_onerr_setup(mrb_state *mrb) {
     return;
   }
   while (eidx > ci[-1].eidx) {
-    mrbb_ecall(mrb, mrb->c->ensure[--eidx]);
+    mrbb_ecall_in_rescue(mrb, mrb->c->ensure[--eidx]);
   }
   while (ci[0].ridx == ci[-1].ridx) {
     cipop(mrb);
     ci = mrb->c->ci;
     mrb->c->stack = ci[1].stackent;
-    if (ci[1].acc == CI_ACC_SKIP) {
-      return;
-    }
     if (ci > mrb->c->cibase) {
       while (eidx > ci[-1].eidx) {
-        mrbb_ecall(mrb, mrb->c->ensure[--eidx]);
+        mrbb_ecall_in_rescue(mrb, mrb->c->ensure[--eidx]);
       }
     }
     else if (ci == mrb->c->cibase) {

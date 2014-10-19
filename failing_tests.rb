@@ -46,16 +46,6 @@ assert('GC.generational_mode=') do
   end
 end
 
-assert('Raise in ensure') do
-  assert_raise(ArgumentError) do
-    begin
-      raise "" # RuntimeError
-    ensure
-      raise ArgumentError
-    end
-  end
-end
-
 assert('Kernel.local_variables', '15.3.1.2.7') do
   a, b = 0, 1
   a += b

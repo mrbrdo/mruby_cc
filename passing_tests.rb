@@ -5582,4 +5582,14 @@ assert('Exception 19') do
   assert_equal [true, true], Class4Exception19.new.a
 end
 
+assert('Raise in ensure') do
+  assert_raise(ArgumentError) do
+    begin
+      raise "" # RuntimeError
+    ensure
+      raise ArgumentError
+    end
+  end
+end
+
 report
