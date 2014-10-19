@@ -1,6 +1,5 @@
 GC.disable
 
-#include 'mruby/mrblib/*.rb'
 #include 'mruby/test/assert.rb'
 
 assert('break between interpreter and compiler (eval does not carry break info further)') do

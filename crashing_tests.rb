@@ -1,6 +1,5 @@
 GC.disable
 
-#include 'mruby/mrblib/*.rb'
 #include 'mruby/test/assert.rb'
 
 assert('Integer#+', '15.2.8.3.1') do
