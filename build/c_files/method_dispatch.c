@@ -63,7 +63,6 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
   /* prepare stack */
   mrb->c->stack += a;
 
-  mrb_value *stackent = mrb->c->ci->stackent;
   ptrdiff_t cioff = mrb->c->ci - mrb->c->cibase;
 
   if (MRB_PROC_CFUNC_P(m)) {
@@ -109,7 +108,7 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
 
   // BREAK
   if ((mrb->c->ci - mrb->c->cibase) != cioff) {
-    mrb->c->stack = stackent; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
+    mrb->c->stack = ci->stackent; // not needed really? safeguard if somehow stack is accessed before break returns to proper location (shouldn't happen)
     // We NEED to cipop the first time, but not after that
     if (mrb->c->ci->proc != (struct RProc *) -1) {
       cipop(mrb);
@@ -117,7 +116,7 @@ mrbb_send_r(mrb_state *mrb, mrb_sym mid, int n, mrb_value **regs_ptr, int a, int
     }
     mrb->c->ci->proc = (struct RProc *)-1;
   } else if (MRB_PROC_CFUNC_P(m)) {
-    mrb->c->stack = stackent;
+    mrb->c->stack = ci->stackent;
     cipop(mrb);
   }
   if (mrb->exc) mrbb_raise(mrb); // we can do this before cipop... see OP_SEND
