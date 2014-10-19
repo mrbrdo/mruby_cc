@@ -5555,4 +5555,31 @@ assert('Issue 1467') do
   C2.new
 end
 
+assert('Exception 19') do
+  class Class4Exception19
+    def a
+      r = @e = false
+      begin
+        b
+      rescue TypeError
+        r = self.z
+      end
+      [ r, @e ]
+    end
+
+    def b
+      begin
+        1 * "b"
+      ensure
+        @e = self.z
+      end
+    end
+
+    def z
+      true
+    end
+  end
+  assert_equal [true, true], Class4Exception19.new.a
+end
+
 report
