@@ -1,4 +1,5 @@
-N_EXAMPLE_ITERATIONS = 10000
+GC.disable
+N_EXAMPLE_ITERATIONS = 1000
 N_SUITE_ITERATIONS = 1
 
 $example_durations = Hash.new
@@ -18,7 +19,7 @@ end
 _suite_iterations = 0
 _suite_start_at = Time.now
 while (_suite_iterations += 1) <= N_SUITE_ITERATIONS
-#include '../mruby/test/t/*.rb'
+#include '../passing_tests.rb'
 end
 $example_durations['ALL'] = Time.now - _suite_start_at
 
