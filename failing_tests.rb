@@ -46,6 +46,7 @@ assert('GC.generational_mode=') do
   end
 end
 
+# because there is no reflection on local variables in compiled code yet (but it is possible)
 assert('Kernel.local_variables', '15.3.1.2.7') do
   a, b = 0, 1
   a += b
@@ -60,6 +61,8 @@ assert('Kernel.local_variables', '15.3.1.2.7') do
   }.call
 end
 
+# because mruby tries to read it from iseq, for cfunc is hardcoded to -1
+# we need to override Proc#arity and read it some other way (perhaps use hash or try to store it in struct RProc somewhere)
 assert('Proc#arity', '15.2.17.4.2') do
   a = Proc.new {|x, y|}.arity
   b = Proc.new {|x, *y, z|}.arity
@@ -81,6 +84,7 @@ assert('__LINE__') do
   assert_equal 7, __LINE__
 end
 
+# these only do not work because Mrbtest is defined in driver.c specifically for testing
 assert('Integer#+', '15.2.8.3.1') do
   a = 1+1
   b = 1+1.0
