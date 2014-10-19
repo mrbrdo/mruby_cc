@@ -80,6 +80,10 @@ void mrbb_rescue_push(mrb_state *mrb, struct mrb_jmpbuf *c_jmp) {
 }
 
 void mrbb_raise(mrb_state *mrb) {
+  mrb_exc_raise(mrb, mrb_obj_value(mrb->exc));
+}
+
+void mrbb_onerr_setup(mrb_state *mrb) {
   // stolen from OP_RETURN
   mrb_callinfo *ci;
   int eidx;
@@ -87,22 +91,21 @@ void mrbb_raise(mrb_state *mrb) {
   eidx = ci->eidx;
 
   if (ci == mrb->c->cibase) {
-    mrbb_stop(mrb);
+    return;
   }
   while (eidx > ci[-1].eidx) {
-    ecall(mrb, --eidx);
+    mrbb_ecall(mrb, mrb->c->ensure[--eidx]);
   }
   while (ci[0].ridx == ci[-1].ridx) {
     cipop(mrb);
     ci = mrb->c->ci;
     mrb->c->stack = ci[1].stackent;
-    // TODO: we used mrb->jmp instead of prev_jmp
-    if (ci[1].acc == CI_ACC_SKIP && mrb->jmp) {
-      MRB_THROW(mrb->jmp);
+    if (ci[1].acc == CI_ACC_SKIP) {
+      return;
     }
     if (ci > mrb->c->cibase) {
       while (eidx > ci[-1].eidx) {
-        ecall(mrb, --eidx);
+        mrbb_ecall(mrb, mrb->c->ensure[--eidx]);
       }
     }
     else if (ci == mrb->c->cibase) {
@@ -123,16 +126,6 @@ void mrbb_raise(mrb_state *mrb) {
       break;
     }
   }
-
-  // TODO does this even work? ridx 0 is probably entry point
-  if (ci->ridx == 0) mrbb_stop(mrb);
-
-  MRB_THROW(mrb->jmp);
- /* irep = ci->proc->body.irep;
-  pool = irep->pool;
-  syms = irep->syms;
-  regs = mrb->c->stack = ci[1].stackent;
-  pc = mrb->c->rescue[--ci->ridx];*/
 }
 
 int mrbb_is_c_rescue(mrb_code *entry) {
@@ -151,6 +144,7 @@ int mrbb_is_c_rescue(mrb_code *entry) {
 */
 
 void mrbb_rescue_pop(mrb_state *mrb) {
+  mrbb_onerr_setup(mrb);
   if (mrb->c->ci->ridx == 0) {
     mrb->exc = mrb_obj_ptr(mrb_exc_new_str(mrb, E_RUNTIME_ERROR, mrb_str_new_cstr(mrb, "mrbb_rescue_pop: reached end of rescue handlers")));
     mrbb_raise(mrb);

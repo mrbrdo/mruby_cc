@@ -8,14 +8,15 @@
         mrbb_rescue_push(mrb, &buf);
       }
       MRB_CATCH(&buf) {
+        // go to rescue
+        mrbb_rescue_pop(mrb);
+
         // if rescued from method that was called from this method
         // and didn't have its own rescue
         // fix global state, be careful if stbase or cibase changed
         mrb->c->ci = mrb->c->cibase + cioff;
         regs = mrb->c->stack = mrb->c->stbase + stoff;
 
-        // go to rescue
-        mrbb_rescue_pop(mrb);
         goto rescue_label(GETARG_sBx(i));
       }
       MRB_END_EXC(&buf);
